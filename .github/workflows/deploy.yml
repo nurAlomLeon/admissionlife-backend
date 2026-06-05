@@ -20,5 +20,4 @@ jobs:
           REMOTE_USER: ${{ secrets.SSH_USER }}
           TARGET: "/home/mcqsolve/admission.mcqsolver.com/"
           EXCLUDE: "/.git/, /.github/"
-          SSH_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
           ARGS: "-rlptv --delete --no-links"
