@@ -49,7 +49,6 @@ class ParsedIssue:
 
 class MonthlyAffairsScraper:
     SOURCE_URL = 'https://uttoron.academy/MonthlyAffairs'
-    MONTHWISE_AJAX_URL = 'https://uttoron.academy/MonthlyAffairs/MonthWiseMonthlyAffairsAjax'
     REQUEST_TIMEOUT = 45
     USER_AGENT = (
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -95,64 +94,7 @@ class MonthlyAffairsScraper:
         response = self._get(self.SOURCE_URL)
         response.raise_for_status()
         response.encoding = response.encoding or 'utf-8'
-        html = response.text
-
-        soup = BeautifulSoup(html, 'html.parser')
-        container = soup.select_one('#MonthlyAffairsDetails')
-        if container is None:
-            return html
-
-        if target_year is None or target_month_name is None:
-            current_date = timezone.localdate()
-            target_year = current_date.year
-            target_month_name = current_date.strftime('%B')
-
-        target_year_str = str(target_year)
-
-        aggregated_sections: dict[tuple[str, str, str], str] = {}
-        initial_sections = container.select(':scope > section.post-item')
-        for section in initial_sections:
-            key = self._section_key(section)
-            if key is not None and key[1] == target_year_str and key[2] == target_month_name:
-                aggregated_sections[key] = str(section)
-
-        categories = self._select_values(soup, '#CategoryType option')
-
-        for category in categories:
-            key = (category, target_year_str, target_month_name)
-            if key in aggregated_sections:
-                continue
-
-            response = self._get(
-                self.MONTHWISE_AJAX_URL,
-                params={
-                    'category': category,
-                    'year': target_year_str,
-                    'month': target_month_name,
-                },
-            )
-            response.raise_for_status()
-            fragment = response.text.strip()
-            if not fragment:
-                continue
-
-            fragment_soup = BeautifulSoup(fragment, 'html.parser')
-            for section in fragment_soup.select('section.post-item'):
-                section_key = self._section_key(section)
-                if (
-                    section_key is not None
-                    and section_key[1] == target_year_str
-                    and section_key[2] == target_month_name
-                    and section_key not in aggregated_sections
-                ):
-                    aggregated_sections[section_key] = str(section)
-
-        container.clear()
-        combined_soup = BeautifulSoup(''.join(aggregated_sections.values()), 'html.parser')
-        for section in combined_soup.select('section.post-item'):
-            container.append(section)
-
-        return str(soup)
+        return response.text
 
     def parse_html(self, html: str) -> list[ParsedIssue]:
         soup = BeautifulSoup(html, 'html.parser')
@@ -179,6 +121,16 @@ class MonthlyAffairsScraper:
             target_month_name=target_month_name,
         )
         parsed_issues = self.parse_html(html)
+
+        if target_year is None or target_month_name is None:
+            current_date = timezone.localdate()
+            target_year = current_date.year
+            target_month_name = current_date.strftime('%B')
+
+        parsed_issues = [
+            issue for issue in parsed_issues
+            if issue.year == target_year and issue.month_name == target_month_name
+        ]
 
         created_count = 0
         updated_count = 0
@@ -507,17 +459,6 @@ class MonthlyAffairsScraper:
         if not value:
             return ''
         return urljoin(self.SOURCE_URL, value)
-
-    def _select_values(self, soup: BeautifulSoup, selector: str) -> list[str]:
-        values = []
-        seen = set()
-        for option in soup.select(selector):
-            value = (option.get('value') or '').strip()
-            if not value or value == '0' or value in seen:
-                continue
-            seen.add(value)
-            values.append(value)
-        return values
 
     def _section_key(self, section: Tag) -> tuple[str, str, str] | None:
         category = (section.get('data-category') or '').strip()
