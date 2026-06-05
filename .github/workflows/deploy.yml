@@ -1,9 +1,24 @@
-- name: Sync Files to cPanel via SSH
-      uses: easingthemes/ssh-deploy@main
-      with:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        REMOTE_HOST: ${{ secrets.SSH_HOST }}
-        REMOTE_USER: ${{ secrets.SSH_USER }}
-        TARGET: "/home/mcqsolve/admission.mcqsolver.com/"
-        EXCLUDE: "/.git/, /.github/"
-        # Add the line below so the robot knows the password:
+name: Deploy Backend to cPanel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Sync Files to cPanel via SSH
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          TARGET: "/home/mcqsolve/admission.mcqsolver.com/"
+          EXCLUDE: "/.git/, /.github/"
+          SSH_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+          ARGS: "-rlptv --delete --no-links"
