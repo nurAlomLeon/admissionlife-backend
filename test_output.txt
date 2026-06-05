@@ -1,0 +1,606 @@
+﻿python : Creating test database for alias 'default' 
+('file:memorydb_default?mode=memory&cache=shared')...
+At line:1 char:1
++ python manage.py test admissionlife --verbosity=2 2>&1 | Out-File -Fi ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Creating test d...che=shared')... 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Found 104 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: allauth, corsheaders, dj_rest_auth, drf_spectacular, google, messages, registration, rest_framework, staticfiles
+  Apply all migrations: account, admin, admissionlife, api, auth, authtoken, contenttypes, sessions, sites, socialaccount
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying account.0001_initial... OK
+  Applying account.0002_email_max_length... OK
+  Applying account.0003_alter_emailaddress_create_unique_verified_email... OK
+  Applying account.0004_alter_emailaddress_drop_unique_email... OK
+  Applying account.0005_emailaddress_idx_upper_email... OK
+  Applying account.0006_emailaddress_lower... OK
+  Applying account.0007_emailaddress_idx_email... OK
+  Applying account.0008_emailaddress_unique_primary_email_fixup... OK
+  Applying account.0009_emailaddress_unique_primary_email... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying admissionlife.0001_initial... OK
+  Applying api.0001_initial... OK
+  Applying api.0002_category_label_remove_reportedquestion_question_and_more... OK
+  Applying api.0003_answer_image_question_explanation_image_and_more... OK
+  Applying api.0004_previousyearquiz... OK
+  Applying api.0005_alter_category_options_category_level_category_order_and_more... OK
+  Applying api.0006_remove_progress_models... OK
+  Applying api.0007_guestuser_quizcategory_streak_useractivity_and_more... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying authtoken.0001_initial... OK
+  Applying authtoken.0002_auto_20160226_1747... OK
+  Applying authtoken.0003_tokenproxy... OK
+  Applying authtoken.0004_alter_tokenproxy_options... OK
+  Applying sessions.0001_initial... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+  Applying socialaccount.0001_initial... OK
+  Applying socialaccount.0002_token_max_lengths... OK
+  Applying socialaccount.0003_extra_data_default_dict... OK
+  Applying socialaccount.0004_app_provider_id_settings... OK
+  Applying socialaccount.0005_socialtoken_nullable_app... OK
+C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\dj_rest
+_auth\registration\serializers.py:228: UserWarning: 
+app_settings.USERNAME_REQUIRED is deprecated, use: 
+app_settings.SIGNUP_FIELDS['username']['required']
+  required=allauth_account_settings.USERNAME_REQUIRED,
+C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\dj_rest
+_auth\registration\serializers.py:230: UserWarning: 
+app_settings.EMAIL_REQUIRED is deprecated, use: 
+app_settings.SIGNUP_FIELDS['email']['required']
+  email = 
+serializers.EmailField(required=allauth_account_settings.EMAIL_REQUIRED)
+C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\dj_rest
+_auth\registration\serializers.py:288: UserWarning: 
+app_settings.EMAIL_REQUIRED is deprecated, use: 
+app_settings.SIGNUP_FIELDS['email']['required']
+  email = 
+serializers.EmailField(required=allauth_account_settings.EMAIL_REQUIRED)
+System check identified some issues:
+
+WARNINGS:
+?: settings.ACCOUNT_AUTHENTICATION_METHOD is deprecated, use: 
+settings.ACCOUNT_LOGIN_METHODS = {'email'}
+?: settings.ACCOUNT_EMAIL_REQUIRED is deprecated, use: 
+settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+?: settings.ACCOUNT_USERNAME_REQUIRED is deprecated, use: 
+settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
+System check identified 3 issues (0 silenced).
+test_full_enrollment_flow (admissionlife.tests.test_integration.FullEnrollmentF
+lowTest.test_full_enrollment_flow)
+User submits payment \u2192 Admin approves \u2192 Enrollment created \u2192 
+User can access exams. ... ok
+test_payment_rejection_does_not_create_enrollment (admissionlife.tests.test_int
+egration.FullEnrollmentFlowTest.test_payment_rejection_does_not_create_enrollme
+nt)
+Admin rejects payment \u2192 No enrollment created. ... ok
+test_exam_list_shows_unlock_status (admissionlife.tests.test_integration.LiveBa
+tchSchedulingTest.test_exam_list_shows_unlock_status)
+Exam list for live batch shows is_unlocked based on unlock_datetime. ... ok
+test_live_batch_scheduling_flow (admissionlife.tests.test_integration.LiveBatch
+SchedulingTest.test_live_batch_scheduling_flow)
+Admin sets unlock_datetime \u2192 Time passes \u2192 User gains access. ... ok
+test_cannot_retake_completed_exam (admissionlife.tests.test_integration.PreReco
+rdedBatchProgressionTest.test_cannot_retake_completed_exam)
+Once an exam is completed, user cannot start it again. ... ok
+test_sequential_exam_progression (admissionlife.tests.test_integration.PreRecor
+dedBatchProgressionTest.test_sequential_exam_progression)
+Complete exam 1 \u2192 Exam 2 unlocks \u2192 Complete exam 2 \u2192 Exam 3 
+unlocks. ... ok
+test_batch_leaderboard_includes_user_rank (admissionlife.tests.test_integration
+.ScoringAndLeaderboardTest.test_batch_leaderboard_includes_user_rank)
+Batch leaderboard includes requesting user's own rank. ... ok
+test_leaderboard_reflects_correct_ordering (admissionlife.tests.test_integratio
+n.ScoringAndLeaderboardTest.test_leaderboard_reflects_correct_ordering)
+Multiple users take exam \u2192 Leaderboard reflects correct ordering by 
+score. ... ok
+test_non_enrolled_user_cannot_view_leaderboard (admissionlife.tests.test_integr
+ation.ScoringAndLeaderboardTest.test_non_enrolled_user_cannot_view_leaderboard)
+Non-enrolled user gets 403 on leaderboard. ... ok
+test_scoring_all_correct (admissionlife.tests.test_integration.ScoringAndLeader
+boardTest.test_scoring_all_correct)
+All correct answers \u2192 score equals total questions. ... ok
+test_scoring_with_negative_marking (admissionlife.tests.test_integration.Scorin
+gAndLeaderboardTest.test_scoring_with_negative_marking)
+Verify scoring: +1 correct, -0.25 incorrect, 0 unanswered. ... ok
+test_scoring_with_unanswered (admissionlife.tests.test_integration.ScoringAndLe
+aderboardTest.test_scoring_with_unanswered)
+Unanswered questions get 0 marks. ... ok
+test_rejecting_pending_payment_stores_status_and_notes (admissionlife.tests.tes
+t_properties.TestProperty10PaymentRejectionStoresNotes.test_rejecting_pending_p
+ayment_stores_status_and_notes)
+Rejecting a pending payment should set status=REJECTED and store the ... ok
+test_attempt_has_no_guest_user (admissionlife.tests.test_properties.TestPropert
+y10QuizScoringCorrectness.test_attempt_has_no_guest_user)
+After submit_quiz_attempt is called, the attempt SHALL have ... ok
+test_attempt_is_completed_after_submission (admissionlife.tests.test_properties
+.TestProperty10QuizScoringCorrectness.test_attempt_is_completed_after_submissio
+n)
+After submit_quiz_attempt is called, the attempt SHALL be marked ... ok
+test_score_equals_correct_answer_count (admissionlife.tests.test_properties.Tes
+tProperty10QuizScoringCorrectness.test_score_equals_correct_answer_count)
+The score returned by submit_quiz_attempt equals the count of submissions ... 
+ok
+test_duplicate_transaction_id_per_method_rejected (admissionlife.tests.test_pro
+perties.TestProperty11TransactionIDUniqueness.test_duplicate_transaction_id_per
+_method_rejected)
+A second payment with the same transaction_id and payment_method ... ok
+test_same_transaction_id_different_method_allowed (admissionlife.tests.test_pro
+perties.TestProperty11TransactionIDUniqueness.test_same_transaction_id_differen
+t_method_allowed)
+The same transaction_id with a different payment_method should be allowed ... 
+ok
+test_already_enrolled_user_payment_rejected (admissionlife.tests.test_propertie
+s.TestProperty12AlreadyEnrolledPaymentRejection.test_already_enrolled_user_paym
+ent_rejected)
+A user already enrolled in a batch should not be able to submit a new ... ok
+test_valid_csv_row_preserves_data (admissionlife.tests.test_properties.TestProp
+erty13CSVImportRoundTrip.test_valid_csv_row_preserves_data)
+A valid CSV row imported correctly preserves all data fields. ... ok
+test_invalid_correct_answer_skipped_with_reason (admissionlife.tests.test_prope
+rties.TestProperty14CSVInvalidRowHandling.test_invalid_correct_answer_skipped_w
+ith_reason)
+Invalid correct_answer values cause the row to be skipped with a reason. ... ok
+test_total_rows_equals_created_plus_skipped (admissionlife.tests.test_propertie
+s.TestProperty15CSVImportSummaryConsistency.test_total_rows_equals_created_plus
+_skipped)
+The import summary should satisfy total_rows = created + skipped. ... ok
+test_duplicate_batch_order_rejected (admissionlife.tests.test_properties.TestPr
+operty16ExamBatchOrderUniqueness.test_duplicate_batch_order_rejected)
+Creating two exams with the same batch+order raises IntegrityError. ... ok
+test_all_exams_completed_all_accessible (admissionlife.tests.test_properties.Te
+stProperty17PreRecordedBatchSequentialExamAccess.test_all_exams_completed_all_a
+ccessible)
+When all exams are completed, all should remain accessible. ... ok
+test_completed_exams_and_next_are_accessible (admissionlife.tests.test_properti
+es.TestProperty17PreRecordedBatchSequentialExamAccess.test_completed_exams_and_
+next_are_accessible)
+After completing exams up to order N, the user should have access to all ... ok
+test_newly_enrolled_user_only_accesses_lowest_order_exam (admissionlife.tests.t
+est_properties.TestProperty17PreRecordedBatchSequentialExamAccess.test_newly_en
+rolled_user_only_accesses_lowest_order_exam)
+A newly enrolled user with no completions should only have access ... ok
+test_is_unlocked_flag_matches_can_access_exam (admissionlife.tests.test_propert
+ies.TestProperty18PreRecordedBatchIsUnlockedFlagConsistency.test_is_unlocked_fl
+ag_matches_can_access_exam)
+The is_unlocked flag from get_accessible_exams should be consistent with ... ok
+test_completing_exam_unlocks_next_order_value (admissionlife.tests.test_propert
+ies.TestProperty19SameOrderExamsUnlockTogether.test_completing_exam_unlocks_nex
+t_order_value)
+Completing an exam at order N should unlock the exam at the next order ... ok
+test_sequential_completion_unlocks_exactly_next_order (admissionlife.tests.test
+_properties.TestProperty19SameOrderExamsUnlockTogether.test_sequential_completi
+on_unlocks_exactly_next_order)
+After completing exams at orders [o1, ..., oK], exactly the exams at ... ok
+test_empty_name_rejected (admissionlife.tests.test_properties.TestProperty1Batc
+hValidation.test_empty_name_rejected)
+Empty or whitespace-only batch name should be rejected. ... ok
+test_invalid_batch_type_rejected (admissionlife.tests.test_properties.TestPrope
+rty1BatchValidation.test_invalid_batch_type_rejected)
+Invalid batch_type values should be rejected. ... ok
+test_name_too_long_rejected (admissionlife.tests.test_properties.TestProperty1B
+atchValidation.test_name_too_long_rejected)
+Batch name exceeding 200 characters should be rejected. ... ok
+test_price_out_of_range_rejected (admissionlife.tests.test_properties.TestPrope
+rty1BatchValidation.test_price_out_of_range_rejected)
+Price values outside 0-999999.99 should be rejected. ... ok
+test_valid_data_accepted (admissionlife.tests.test_properties.TestProperty1Batc
+hValidation.test_valid_data_accepted)
+Valid batch data should be accepted by BatchCreateUpdateSerializer. ... ok
+test_level_filter_completeness_and_soundness (admissionlife.tests.test_properti
+es.TestProperty1CategoryFilteringInvariant.test_level_filter_completeness_and_s
+oundness)
+Combined: filtered result is exactly the set of categories with the given 
+level. ... ok
+test_level_filter_excludes_no_matching_category (admissionlife.tests.test_prope
+rties.TestProperty1CategoryFilteringInvariant.test_level_filter_excludes_no_mat
+ching_category)
+When filtering by level, no category with that level is excluded from results. 
+... ok
+test_level_filter_returns_only_matching_categories (admissionlife.tests.test_pr
+operties.TestProperty1CategoryFilteringInvariant.test_level_filter_returns_only
+_matching_categories)
+When filtering by level, all returned categories must have that level. ... ok
+test_no_filter_returns_all_categories (admissionlife.tests.test_properties.Test
+Property1CategoryFilteringInvariant.test_no_filter_returns_all_categories)
+When no filter is applied, all categories are returned (baseline check). ... ok
+test_parent_filter_completeness_and_soundness (admissionlife.tests.test_propert
+ies.TestProperty1CategoryFilteringInvariant.test_parent_filter_completeness_and
+_soundness)
+Combined: filtered result is exactly the set of categories with the given 
+parent. ... ok
+test_parent_filter_excludes_no_matching_category (admissionlife.tests.test_prop
+erties.TestProperty1CategoryFilteringInvariant.test_parent_filter_excludes_no_m
+atching_category)
+When filtering by parent, no category with that parent is excluded from 
+results. ... ok
+test_parent_filter_returns_only_matching_categories (admissionlife.tests.test_p
+roperties.TestProperty1CategoryFilteringInvariant.test_parent_filter_returns_on
+ly_matching_categories)
+When filtering by parent, all returned categories must have that parent_id. 
+... ok
+test_exam_accessible_when_current_time_past_unlock (admissionlife.tests.test_pr
+operties.TestProperty20LiveBatchTimeBasedExamAccess.test_exam_accessible_when_c
+urrent_time_past_unlock)
+When the current server datetime >= unlock_datetime, the exam should ... ok
+test_exam_not_accessible_when_current_time_before_unlock (admissionlife.tests.t
+est_properties.TestProperty20LiveBatchTimeBasedExamAccess.test_exam_not_accessi
+ble_when_current_time_before_unlock)
+When the current server datetime < unlock_datetime, the exam should ... ok
+test_exam_not_accessible_when_unlock_datetime_is_null (admissionlife.tests.test
+_properties.TestProperty20LiveBatchTimeBasedExamAccess.test_exam_not_accessible
+_when_unlock_datetime_is_null)
+When unlock_datetime is null, the exam should NOT be accessible. ... ok
+test_get_accessible_exams_is_unlocked_flag_for_live_batch (admissionlife.tests.
+test_properties.TestProperty20LiveBatchTimeBasedExamAccess.test_get_accessible_
+exams_is_unlocked_flag_for_live_batch)
+The is_unlocked flag in get_accessible_exams should be True for exams ... ok
+test_updated_unlock_datetime_to_future_denies_access (admissionlife.tests.test_
+properties.TestProperty20LiveBatchTimeBasedExamAccess.test_updated_unlock_datet
+ime_to_future_denies_access)
+If an Admin updates an Exam's unlock_datetime to a future value after ... ok
+test_scoring_formula_correctness (admissionlife.tests.test_properties.TestPrope
+rty21ScoringFormulaCorrectness.test_scoring_formula_correctness)
+For any combination of correct, incorrect, and unanswered counts, ... ok
+test_completed_exam_cannot_be_started_again (admissionlife.tests.test_propertie
+s.TestProperty22NoExamRetakes.test_completed_exam_cannot_be_started_again)
+A completed exam cannot be started again by the same user. ... ok
+test_start_response_excludes_correct_answer (admissionlife.tests.test_propertie
+s.TestProperty23ExamQuestionsHideCorrectAnswers.test_start_response_excludes_co
+rrect_answer)
+The exam start response should not include correct_answer in questions. ... ok
+test_batch_leaderboard_sorted_by_total_score_descending (admissionlife.tests.te
+st_properties.TestProperty24BatchLeaderboardOrdering.test_batch_leaderboard_sor
+ted_by_total_score_descending)
+Users with higher total_score (sum of completed attempt scores) should ... ok
+test_batch_leaderboard_tiebreaker_average_score_then_earliest_completion (admis
+sionlife.tests.test_properties.TestProperty24BatchLeaderboardOrdering.test_batc
+h_leaderboard_tiebreaker_average_score_then_earliest_completion)
+When users have the same total_score, they should be ordered by ... ok
+test_batch_leaderboard_includes_requesting_user_rank (admissionlife.tests.test_
+properties.TestProperty25BatchLeaderboardIncludesUserRank.test_batch_leaderboar
+d_includes_requesting_user_rank)
+The batch leaderboard includes the requesting user's rank. ... ok
+test_exam_leaderboard_sorted_by_score_descending (admissionlife.tests.test_prop
+erties.TestProperty26ExamLeaderboardOrdering.test_exam_leaderboard_sorted_by_sc
+ore_descending)
+Users should be sorted by their best attempt score in descending order. ... ok
+test_exam_leaderboard_tiebreaker_duration_then_end_time (admissionlife.tests.te
+st_properties.TestProperty26ExamLeaderboardOrdering.test_exam_leaderboard_tiebr
+eaker_duration_then_end_time)
+When users have the same score, they should be ordered by completion ... ok
+test_exam_leaderboard_uses_best_attempt_per_user (admissionlife.tests.test_prop
+erties.TestProperty26ExamLeaderboardOrdering.test_exam_leaderboard_uses_best_at
+tempt_per_user)
+When a user has multiple completed attempts, only their highest-scoring ... ok
+test_exam_leaderboard_includes_requesting_user_rank (admissionlife.tests.test_p
+roperties.TestProperty27ExamLeaderboardIncludesUserRank.test_exam_leaderboard_i
+ncludes_requesting_user_rank)
+The exam leaderboard includes the requesting user's rank. ... ok
+test_cache_invalidated_on_attempt_completion (admissionlife.tests.test_properti
+es.TestProperty28LeaderboardCacheInvalidation.test_cache_invalidated_on_attempt
+_completion)
+Completing an attempt invalidates both batch and exam leaderboard caches. ... 
+ok
+test_non_admin_sees_only_active_batches (admissionlife.tests.test_properties.Te
+stProperty2ActiveOnlyBatchListing.test_non_admin_sees_only_active_batches)
+A non-admin user listing batches should only see batches where ... C:\Users\use
+r\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\pagi
+nation.py:207: UnorderedObjectListWarning: Pagination may yield inconsistent 
+results with an unordered object_list: <class 'admissionlife.models.Batch'> 
+QuerySet.
+  paginator = self.django_paginator_class(queryset, page_size)
+ok
+test_children_in_tree_match_database (admissionlife.tests.test_properties.TestP
+roperty2CategoryTreeStructuralIntegrity.test_children_in_tree_match_database)
+For every node in the tree, its children list matches the actual children ... 
+ok
+test_every_category_appears_exactly_once_in_tree (admissionlife.tests.test_prop
+erties.TestProperty2CategoryTreeStructuralIntegrity.test_every_category_appears
+_exactly_once_in_tree)
+Every category in the database appears exactly once in the tree structure ... 
+ok
+test_root_nodes_have_parent_null (admissionlife.tests.test_properties.TestPrope
+rty2CategoryTreeStructuralIntegrity.test_root_nodes_have_parent_null)
+The root nodes in the tree are exactly those categories with parent=null ... ok
+test_different_batch_names_accepted (admissionlife.tests.test_properties.TestPr
+operty3BatchNameUniqueness.test_different_batch_names_accepted)
+Creating batches with different names should be accepted. ... ok
+test_duplicate_batch_name_rejected (admissionlife.tests.test_properties.TestPro
+perty3BatchNameUniqueness.test_duplicate_batch_name_rejected)
+Creating a batch with a name that already exists should be rejected ... ok
+test_descendant_ids_exclude_non_descendants (admissionlife.tests.test_propertie
+s.TestProperty3QuestionCategoryFilterCorrectness.test_descendant_ids_exclude_no
+n_descendants)
+get_descendant_category_ids does not include categories that are not ... ok
+test_descendant_ids_from_intermediate_node (admissionlife.tests.test_properties
+.TestProperty3QuestionCategoryFilterCorrectness.test_descendant_ids_from_interm
+ediate_node)
+get_descendant_category_ids works correctly when called on an ... ok
+test_descendant_ids_include_all_descendants (admissionlife.tests.test_propertie
+s.TestProperty3QuestionCategoryFilterCorrectness.test_descendant_ids_include_al
+l_descendants)
+get_descendant_category_ids includes all children and grandchildren ... ok
+test_descendant_ids_include_self (admissionlife.tests.test_properties.TestPrope
+rty3QuestionCategoryFilterCorrectness.test_descendant_ids_include_self)
+get_descendant_category_ids always includes the queried category itself. ... ok
+test_approving_pending_payment_creates_enrollment (admissionlife.tests.test_pro
+perties.TestProperty4PaymentApprovalCreatesEnrollment.test_approving_pending_pa
+yment_creates_enrollment)
+Approving a pending payment sets status to APPROVED and creates an ... ok
+test_delete_removes_saved_question (admissionlife.tests.test_properties.TestPro
+perty4SavedQuestionRoundTripAndIdempotence.test_delete_removes_saved_question)
+Deleting the saved question SHALL remove it from the user's saved list, ... ok
+test_full_round_trip_save_resave_delete (admissionlife.tests.test_properties.Te
+stProperty4SavedQuestionRoundTripAndIdempotence.test_full_round_trip_save_resav
+e_delete)
+Full round-trip: save \u2192 verify 1 record \u2192 re-save \u2192 verify 
+still 1 record ... ok
+test_re_save_does_not_create_duplicate (admissionlife.tests.test_properties.Tes
+tProperty4SavedQuestionRoundTripAndIdempotence.test_re_save_does_not_create_dup
+licate)
+Saving the same question a second time SHALL not create a duplicate ... ok
+test_save_creates_exactly_one_record (admissionlife.tests.test_properties.TestP
+roperty4SavedQuestionRoundTripAndIdempotence.test_save_creates_exactly_one_reco
+rd)
+Saving a question for a user SHALL create exactly one SavedQuestion ... ok
+test_check_enrollment_returns_false_when_not_enrolled (admissionlife.tests.test
+_properties.TestProperty5EnrollmentCheckConsistency.test_check_enrollment_retur
+ns_false_when_not_enrolled)
+When no Enrollment record exists for a user-batch pair, ... ok
+test_check_enrollment_returns_true_when_enrolled (admissionlife.tests.test_prop
+erties.TestProperty5EnrollmentCheckConsistency.test_check_enrollment_returns_tr
+ue_when_enrolled)
+When an Enrollment record exists for a user-batch pair, ... ok
+test_both_users_saving_same_questions_remain_isolated (admissionlife.tests.test
+_properties.TestProperty5SavedQuestionOwnershipIsolation.test_both_users_saving
+_same_questions_remain_isolated)
+When both user A and user B save the same questions, each user's ... ok
+test_user_a_saved_list_never_contains_user_b_records (admissionlife.tests.test_
+properties.TestProperty5SavedQuestionOwnershipIsolation.test_user_a_saved_list_
+never_contains_user_b_records)
+User A's saved question list (filtered by user=A, guest_user__isnull=True) ... 
+ok
+test_user_a_with_no_saves_has_empty_list_regardless_of_user_b (admissionlife.te
+sts.test_properties.TestProperty5SavedQuestionOwnershipIsolation.test_user_a_wi
+th_no_saves_has_empty_list_regardless_of_user_b)
+When user A has saved no questions (or fewer than user B), user A's ... ok
+test_second_payment_approval_does_not_duplicate_enrollment (admissionlife.tests
+.test_properties.TestProperty6EnrollmentUniquenessAndIdempotence.test_second_pa
+yment_approval_does_not_duplicate_enrollment)
+Approving a second payment for the same user-batch pair should not ... ok
+test_category_filter_returns_only_matching_records (admissionlife.tests.test_pr
+operties.TestProperty6SavedQuestionFilterCorrectness.test_category_filter_retur
+ns_only_matching_records)
+When filtering saved questions by category, every returned SavedQuestion ... 
+ERROR
+test_label_filter_returns_only_matching_records (admissionlife.tests.test_prope
+rties.TestProperty6SavedQuestionFilterCorrectness.test_label_filter_returns_onl
+y_matching_records)
+When filtering saved questions by label, every returned SavedQuestion ... ERROR
+test_search_filter_returns_only_matching_records (admissionlife.tests.test_prop
+erties.TestProperty6SavedQuestionFilterCorrectness.test_search_filter_returns_o
+nly_matching_records)
+When filtering saved questions by search text, every returned ... ERROR
+test_non_enrolled_user_gets_403 (admissionlife.tests.test_properties.TestProper
+ty7NonEnrolledUserDeniedExamAccess.test_non_enrolled_user_gets_403)
+A non-enrolled user attempting to start an exam gets 403. ... ok
+test_report_all_fields_correct (admissionlife.tests.test_properties.TestPropert
+y7QuestionReportCreationCorrectness.test_report_all_fields_correct)
+Combined: a newly created QuestionReport has status=PENDING, correct user, ... 
+ok
+test_report_has_correct_question (admissionlife.tests.test_properties.TestPrope
+rty7QuestionReportCreationCorrectness.test_report_has_correct_question)
+A newly created QuestionReport must reference the correct question. ... ok
+test_report_has_correct_reason (admissionlife.tests.test_properties.TestPropert
+y7QuestionReportCreationCorrectness.test_report_has_correct_reason)
+A newly created QuestionReport must store the exact reason provided. ... ok
+test_report_has_correct_user (admissionlife.tests.test_properties.TestProperty7
+QuestionReportCreationCorrectness.test_report_has_correct_user)
+A newly created QuestionReport must be associated with the correct user. ... ok
+test_report_has_pending_status (admissionlife.tests.test_properties.TestPropert
+y7QuestionReportCreationCorrectness.test_report_has_pending_status)
+A newly created QuestionReport must have status=PENDING. ... ok
+test_invalid_amount_rejected (admissionlife.tests.test_properties.TestProperty8
+PaymentSenderNumberValidation.test_invalid_amount_rejected)
+Invalid amounts (< 1 or > 99999) should be rejected. ... ok
+test_invalid_payment_method_rejected (admissionlife.tests.test_properties.TestP
+roperty8PaymentSenderNumberValidation.test_invalid_payment_method_rejected)
+Invalid payment methods should not be in the Payment.PaymentMethod choices. 
+... ok
+test_invalid_sender_number_rejected (admissionlife.tests.test_properties.TestPr
+operty8PaymentSenderNumberValidation.test_invalid_sender_number_rejected)
+Invalid sender numbers should be rejected with ValidationError. ... ok
+test_invalid_transaction_id_rejected (admissionlife.tests.test_properties.TestP
+roperty8PaymentSenderNumberValidation.test_invalid_transaction_id_rejected)
+Invalid transaction IDs (empty or >30 chars) should be rejected. ... ok
+test_valid_amount_accepted (admissionlife.tests.test_properties.TestProperty8Pa
+ymentSenderNumberValidation.test_valid_amount_accepted)
+Valid amounts (1 to 99999) should be accepted. ... ok
+test_valid_payment_method_accepted (admissionlife.tests.test_properties.TestPro
+perty8PaymentSenderNumberValidation.test_valid_payment_method_accepted)
+Valid payment methods should be in the Payment.PaymentMethod choices. ... ok
+test_valid_sender_number_accepted (admissionlife.tests.test_properties.TestProp
+erty8PaymentSenderNumberValidation.test_valid_sender_number_accepted)
+Valid sender numbers (11 digits starting with '01') should be accepted. ... ok
+test_valid_transaction_id_accepted (admissionlife.tests.test_properties.TestPro
+perty8PaymentSenderNumberValidation.test_valid_transaction_id_accepted)
+Valid transaction IDs (1-30 chars) should be accepted. ... ok
+test_question_count_per_category_does_not_exceed_available (admissionlife.tests
+.test_properties.TestProperty8PracticeQuizGenerationCategoryConstraint.test_que
+stion_count_per_category_does_not_exceed_available)
+When fewer questions are available than requested, the quiz should ... ok
+test_quiz_contains_only_questions_from_specified_category (admissionlife.tests.
+test_properties.TestProperty8PracticeQuizGenerationCategoryConstraint.test_quiz
+_contains_only_questions_from_specified_category)
+When include_subcategories=False, the quiz should only contain questions ... ok
+test_quiz_includes_descendant_questions_when_include_subcategories_true (admiss
+ionlife.tests.test_properties.TestProperty8PracticeQuizGenerationCategoryConstr
+aint.test_quiz_includes_descendant_questions_when_include_subcategories_true)
+When include_subcategories=True, the quiz should include questions from ... ok
+test_quiz_type_is_always_practice (admissionlife.tests.test_properties.TestProp
+erty8PracticeQuizGenerationCategoryConstraint.test_quiz_type_is_always_practice
+)
+For any valid category configuration that produces at least one question, ... 
+ok
+test_payment_created_with_pending_status_and_correct_user (admissionlife.tests.
+test_properties.TestProperty9PaymentCreatedAsPending.test_payment_created_with_
+pending_status_and_correct_user)
+Submitting a valid payment should create a Payment with status=PENDING ... ok
+test_hides_correct_answers_regardless_of_mix (admissionlife.tests.test_properti
+es.TestProperty9QuizAttemptHidesCorrectAnswers.test_hides_correct_answers_regar
+dless_of_mix)
+Even when questions have a mix of correct and incorrect answers, ... ok
+test_serialized_answers_do_not_contain_is_correct (admissionlife.tests.test_pro
+perties.TestProperty9QuizAttemptHidesCorrectAnswers.test_serialized_answers_do_
+not_contain_is_correct)
+When a quiz is serialized via QuestionQuizSerializer (used in ... ok
+test_serialized_questions_contain_required_fields (admissionlife.tests.test_pro
+perties.TestProperty9QuizAttemptHidesCorrectAnswers.test_serialized_questions_c
+ontain_required_fields)
+When a quiz is serialized via QuestionQuizSerializer, each question ... ok
+test_serialized_questions_do_not_contain_explanation (admissionlife.tests.test_
+properties.TestProperty9QuizAttemptHidesCorrectAnswers.test_serialized_question
+s_do_not_contain_explanation)
+When a quiz is serialized via QuestionQuizSerializer (used in ... ok
+
+======================================================================
+ERROR: test_category_filter_returns_only_matching_records (admissionlife.tests.
+test_properties.TestProperty6SavedQuestionFilterCorrectness.test_category_filte
+r_returns_only_matching_records)
+When filtering saved questions by category, every returned SavedQuestion
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\user\Desktop\django\qbank-dj\admissionlife\tests\test_properti
+es.py", line 5532, in test_category_filter_returns_only_matching_records
+    filter_fragment=st.text(
+           ^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages
+\hypothesis\core.py", line 2264, in wrapped_test
+    raise the_error_hypothesis_found
+  File "C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages
+\hypothesis\internal\healthcheck.py", line 28, in fail_health_check
+    raise FailedHealthCheck(message)
+hypothesis.errors.FailedHealthCheck: It looks like this test is filtering out 
+a lot of inputs. 0 inputs were generated successfully, while 50 inputs were 
+filtered out. 
+
+An input might be filtered out by calls to assume(), strategy.filter(...), or 
+occasionally by Hypothesis internals.
+
+Applying this much filtering makes input generation slow, since Hypothesis 
+must discard inputs which are filtered out and try generating it again. It is 
+also possible that applying this much filtering will distort the domain and/or 
+distribution of the test, leaving your testing less rigorous than expected.
+
+If you expect this many inputs to be filtered out during generation, you can 
+disable this health check with 
+@settings(suppress_health_check=[HealthCheck.filter_too_much]). See https://hyp
+othesis.readthedocs.io/en/latest/reference/api.html#hypothesis.HealthCheck for 
+details.
+
+======================================================================
+ERROR: test_label_filter_returns_only_matching_records (admissionlife.tests.tes
+t_properties.TestProperty6SavedQuestionFilterCorrectness.test_label_filter_retu
+rns_only_matching_records)
+When filtering saved questions by label, every returned SavedQuestion
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\user\Desktop\django\qbank-dj\admissionlife\tests\test_properti
+es.py", line 5611, in test_label_filter_returns_only_matching_records
+    filter_fragment=st.text(
+           ^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages
+\hypothesis\core.py", line 2264, in wrapped_test
+    raise the_error_hypothesis_found
+  File "C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages
+\hypothesis\internal\healthcheck.py", line 28, in fail_health_check
+    raise FailedHealthCheck(message)
+hypothesis.errors.FailedHealthCheck: It looks like this test is filtering out 
+a lot of inputs. 0 inputs were generated successfully, while 50 inputs were 
+filtered out. 
+
+An input might be filtered out by calls to assume(), strategy.filter(...), or 
+occasionally by Hypothesis internals.
+
+Applying this much filtering makes input generation slow, since Hypothesis 
+must discard inputs which are filtered out and try generating it again. It is 
+also possible that applying this much filtering will distort the domain and/or 
+distribution of the test, leaving your testing less rigorous than expected.
+
+If you expect this many inputs to be filtered out during generation, you can 
+disable this health check with 
+@settings(suppress_health_check=[HealthCheck.filter_too_much]). See https://hyp
+othesis.readthedocs.io/en/latest/reference/api.html#hypothesis.HealthCheck for 
+details.
+
+======================================================================
+ERROR: test_search_filter_returns_only_matching_records (admissionlife.tests.te
+st_properties.TestProperty6SavedQuestionFilterCorrectness.test_search_filter_re
+turns_only_matching_records)
+When filtering saved questions by search text, every returned
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\user\Desktop\django\qbank-dj\admissionlife\tests\test_properti
+es.py", line 5698, in test_search_filter_returns_only_matching_records
+    search_fragment=st.text(
+           ^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages
+\hypothesis\core.py", line 2264, in wrapped_test
+    raise the_error_hypothesis_found
+  File "C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages
+\hypothesis\internal\healthcheck.py", line 28, in fail_health_check
+    raise FailedHealthCheck(message)
+hypothesis.errors.FailedHealthCheck: It looks like this test is filtering out 
+a lot of inputs. 0 inputs were generated successfully, while 50 inputs were 
+filtered out. 
+
+An input might be filtered out by calls to assume(), strategy.filter(...), or 
+occasionally by Hypothesis internals.
+
+Applying this much filtering makes input generation slow, since Hypothesis 
+must discard inputs which are filtered out and try generating it again. It is 
+also possible that applying this much filtering will distort the domain and/or 
+distribution of the test, leaving your testing less rigorous than expected.
+
+If you expect this many inputs to be filtered out during generation, you can 
+disable this health check with 
+@settings(suppress_health_check=[HealthCheck.filter_too_much]). See https://hyp
+othesis.readthedocs.io/en/latest/reference/api.html#hypothesis.HealthCheck for 
+details.
+
+----------------------------------------------------------------------
+Ran 104 tests in 536.663s
+
+FAILED (errors=3)
+Destroying test database for alias 'default' 
+('file:memorydb_default?mode=memory&cache=shared')...
+
+  Applying socialaccount.0006_alter_socialaccount_extra_data... OK
+You can reproduce this failure by adding @seed(328587071249087132735643598737901023974) to this test.
+You can reproduce this failure by adding @seed(156571136957061863606630936557083368246) to this test.
+You can reproduce this failure by adding @seed(3691468574588171458411393777907075323) to this test.

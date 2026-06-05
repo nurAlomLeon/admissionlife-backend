@@ -1,0 +1,365 @@
+================================================================================
+ADMISSIONLIFE FLUTTER APP — 5-STEP BUILD GUIDE WITH PROMPTS
+================================================================================
+
+Each step builds on the previous one. Copy-paste each prompt into your AI coding
+assistant (Cursor, Kiro, etc.) when you're ready to build that step.
+
+================================================================================
+STEP 1: PROJECT SETUP + AUTH + BATCH BROWSING
+================================================================================
+
+What you get after this step:
+  - Flutter project with clean architecture folder structure
+  - Dio HTTP client with JWT auth interceptor
+  - Google Sign-In working (login/logout)
+  - Token storage with auto-refresh
+  - Batch list screen (home page)
+  - Batch detail screen
+  - go_router navigation with auth guard
+  - Bottom navigation shell (4 tabs)
+
+PROMPT 1:
+---------------------------------------------------------------------------------
+Create a Flutter app called "admissionlife" using Riverpod for state management.
+
+Tech stack: flutter_riverpod, riverpod_annotation, dio, go_router, google_sign_in,
+flutter_secure_storage, freezed, json_serializable.
+
+Base URL: https://YOUR_DOMAIN/api
+
+Architecture: Clean Architecture with features/ folder. Each feature has data/
+(repository + models), providers/, and presentation/ (screens + widgets).
+
+Build these in order:
+
+1. Core setup:
+   - lib/core/network/dio_client.dart — Dio singleton with base URL, JSON headers
+   - lib/core/network/auth_interceptor.dart — reads JWT from secure storage, adds
+     Authorization header, auto-refreshes on 401 using POST /auth/token/refresh/
+   - lib/core/constants/api_endpoints.dart — all endpoint paths (see attached API doc)
+
+2. Auth feature:
+   - Model: UserModel (pk, email, first_name, last_name)
+   - Repository: AuthRepository — googleLogin(accessToken), refreshToken(), logout()
+   - Provider: authProvider (AsyncNotifier<UserModel?>) — manages auth state,
+     stores tokens in flutter_secure_storage, exposes isLoggedIn
+   - Screens: SplashScreen (checks stored token), LoginScreen (Google Sign-In button)
+   - API: POST /auth/google/ with {"access_token": googleAccessToken}
+     Response: {"access": "...", "refresh": "...", "user": {...}}
+
+3. Batch feature:
+   - Models: BatchModel (id, name, description, batch_type, price, is_active,
+     exam_count, enrollment_count)
+   - Repository: BatchRepository — getBatches(), getBatchDetail(id)
+   - Provider: batchListProvider, batchDetailProvider(id)
+   - Screens: BatchListScreen (grid of batch cards), BatchDetailScreen
+   - API: GET /admissionlife/batches/, GET /admissionlife/batches/{id}/
+
+4. Navigation:
+   - go_router with redirect guard (unauthenticated → /login)
+   - Bottom nav: Home (batches), Question Bank, Practice, Profile
+   - Routes: /login, /home, /batches/:id
+
+Make all models with @freezed and @JsonSerializable. Use AsyncValue.when() pattern
+for loading/error/data states in all screens.
+---------------------------------------------------------------------------------
+
+
+================================================================================
+STEP 2: PAYMENT + ENROLLMENT + EXAM LIST
+================================================================================
+
+What you get after this step:
+  - Payment submission form (bKash/Nagad/Rocket/Upay)
+  - Payment history screen
+  - Enrollment check (is user enrolled in batch?)
+  - Exam list screen with lock/unlock icons
+  - Conditional UI: enrolled → show exams, not enrolled → show payment form
+
+PROMPT 2:
+---------------------------------------------------------------------------------
+Continue building the admissionlife Flutter app. The project already has auth,
+batch browsing, Dio client with auth interceptor, and go_router set up.
+
+Now add these features:
+
+1. Payment feature:
+   - Models: PaymentModel (id, batch, batch_name, payment_method, transaction_id,
+     sender_number, amount, status, admin_notes, created_at, reviewed_at)
+   - Repository: PaymentRepository — submitPayment(data), getPaymentHistory()
+   - Provider: paymentHistoryProvider, paymentSubmitProvider
+   - Screens:
+     a) PaymentSubmitScreen — form with: payment method dropdown (bKash, Nagad,
+        Rocket, Upay), transaction ID field, sender number field (11 digits,
+        starts with 01), amount field (pre-filled with batch price)
+     b) PaymentHistoryScreen — list of payments with status chips
+        (PENDING=yellow, APPROVED=green, REJECTED=red)
+   - API: POST /admissionlife/payments/, GET /admissionlife/payments/
+   - Validation: sender_number must be 11 digits starting with "01",
+     transaction_id max 30 chars
+
+2. Enrollment feature:
+   - Provider: enrollmentCheckProvider(batchId) — FutureProvider.family<bool, int>
+   - API: GET /admissionlife/enrollments/check/{batch_id}/
+   - Returns {"is_enrolled": true/false}
+
+3. Exam list feature:
+   - Models: ExamModel (id, batch, title, duration_minutes, order, passing_score,
+     is_active, unlock_datetime, question_count, is_unlocked)
+   - Repository: ExamRepository — getExams(batchId)
+   - Provider: examListProvider(batchId)
+   - Screen: ExamListScreen — shows exams with lock/unlock icons
+     Unlocked exams are tappable, locked ones show a lock icon with gray overlay
+   - API: GET /admissionlife/exams/?batch={id}
+
+4. Update BatchDetailScreen:
+   - Check enrollment status on load
+   - If enrolled: show "View Exams" button → navigates to ExamListScreen
+   - If not enrolled: show "Enroll Now" button → navigates to PaymentSubmitScreen
+   - Show payment status if pending
+
+Add routes: /batches/:id/payment, /batches/:id/exams, /payments
+Use Riverpod for all state. Show loading shimmer while fetching.
+---------------------------------------------------------------------------------
+
+
+================================================================================
+STEP 3: EXAM TAKING + RESULTS + LEADERBOARD
+================================================================================
+
+What you get after this step:
+  - Full exam taking experience with countdown timer
+  - Question navigation (swipe + bottom indicators)
+  - Answer selection and submission
+  - Result screen with score breakdown (+1/-0.25/0)
+  - Batch and exam leaderboards with current user rank
+
+PROMPT 3:
+---------------------------------------------------------------------------------
+Continue building the admissionlife Flutter app. Auth, batches, payments,
+enrollment check, and exam list are done.
+
+Now add the exam taking system and leaderboards:
+
+1. Exam Taking:
+   - Provider: examAttemptProvider (StateNotifier) managing:
+     - List of questions from start response
+     - Map<int, int?> of questionId → selectedAnswer (1-4 or null)
+     - Current question index
+     - Timer countdown (duration_minutes from exam)
+   - Flow:
+     a) POST /admissionlife/exam-attempts/{exam_id}/start/ → get attempt_id + questions
+        Questions have: id, question_text, answer_1, answer_2, answer_3, answer_4
+     b) User answers questions (PageView for swiping)
+     c) Timer counts down. Auto-submit at 0.
+     d) POST /admissionlife/exam-attempts/{attempt_id}/submit/
+        Body: {"submissions": [{"question_id": 1, "selected_answer": 2}, ...]}
+     e) Response has score, correct_count, incorrect_count, unanswered_count
+   - Screen: ExamTakingScreen with:
+     - Top: timer (MM:SS format, turns red at <1min)
+     - Center: PageView of questions with 4 answer options (radio buttons)
+     - Bottom: question number indicators (green=answered, gray=unanswered)
+     - FAB: "Submit" button with confirmation dialog
+   - Handle edge cases: back button shows "Are you sure?" dialog
+
+2. Exam Result:
+   - Provider: examResultProvider(attemptId) — FutureProvider.family
+   - API: GET /admissionlife/exam-attempts/{attempt_id}/result/
+   - Screen: ExamResultScreen showing:
+     - Score (large number)
+     - Breakdown: correct (+1 each), incorrect (-0.25 each), unanswered (0)
+     - Total questions
+     - Time taken
+     - "View Leaderboard" button
+
+3. Leaderboard:
+   - Models: LeaderboardEntry (rank, user_display_name, total_score/score,
+     total_exams_completed, average_score, correct_count, incorrect_count,
+     duration_seconds)
+   - Repository: LeaderboardRepository — getBatchLeaderboard(batchId, page),
+     getExamLeaderboard(examId, page)
+   - Providers: batchLeaderboardProvider(batchId), examLeaderboardProvider(examId)
+   - Screens:
+     a) BatchLeaderboardScreen — ranked list with current user's rank at bottom
+     b) ExamLeaderboardScreen — same pattern
+   - UI: Top 3 with medal icons, scrollable list, sticky "Your Rank" card at bottom
+   - API: GET /admissionlife/batches/{id}/leaderboard/?page=1&page_size=20
+          GET /admissionlife/exams/{id}/leaderboard/?page=1&page_size=20
+
+Add routes: /exams/:examId/take, /exam-results/:attemptId,
+/batches/:batchId/leaderboard, /exams/:examId/leaderboard
+
+Timer implementation: use a Riverpod StateNotifier with Timer.periodic that
+decrements every second. Dispose timer on screen exit or submit.
+---------------------------------------------------------------------------------
+
+
+================================================================================
+STEP 4: QUESTION BANK + SAVED QUESTIONS + REPORTS
+================================================================================
+
+What you get after this step:
+  - Category hierarchy browsing (Subject → Part → Topic)
+  - Question list filtered by category
+  - Question detail with answers + explanation
+  - Bookmark/save questions
+  - Report problematic questions
+
+PROMPT 4:
+---------------------------------------------------------------------------------
+Continue building the admissionlife Flutter app. Auth, batches, payments, exams,
+exam taking with timer, results, and leaderboards are all done.
+
+Now add the Question Bank feature:
+
+1. Category Browsing:
+   - Models: CategoryModel (id, name, parent, level, order),
+     CategoryTreeModel (id, name, level, order, children: List<CategoryTreeModel>)
+   - Repository: CategoryRepository — getTree(), getChildren(parentId),
+     getCategories(level, parent)
+   - Provider: categoryTreeProvider (fetches full tree on init)
+   - Screen: CategoryBrowseScreen
+     - Shows subjects (level 0) as cards/tiles
+     - Tap subject → shows parts (level 1)
+     - Tap part → shows topics (level 2)
+     - Tap topic → navigates to QuestionListScreen
+     - Use breadcrumb navigation at top: "Bangla > Grammar > Verb"
+   - API: GET /admissionlife/categories/tree/
+          GET /admissionlife/categories/{id}/children/
+
+2. Question List:
+   - Models: QuestionModel (id, question_text, question_image, explanation,
+     explanation_image, category, category_name, answers: List<AnswerModel>,
+     labels: List<LabelModel>)
+     AnswerModel (id, text, image, is_correct)
+     LabelModel (id, name)
+   - Repository: QuestionRepository — getQuestions(categoryId, includeDescendants, page)
+   - Provider: questionListProvider(categoryId) with pagination
+   - Screen: QuestionListScreen
+     - Infinite scroll list of question cards
+     - Each card shows: question text preview, category name, label chips
+     - Bookmark icon on each card
+     - Tap → QuestionDetailScreen
+   - API: GET /admissionlife/questions/?category={id}&category_level=all
+
+3. Question Detail:
+   - Screen: QuestionDetailScreen
+     - Full question text (with image if present)
+     - Answer options with correct/incorrect indicators (green check / red X)
+     - Explanation section (collapsible, with image if present)
+     - Bookmark button (top right)
+     - Report button (bottom)
+
+4. Saved Questions:
+   - Repository: SavedQuestionRepository — getSaved(), save(questionId), delete(id)
+   - Provider: savedQuestionsProvider (AsyncNotifier with list)
+   - Provider: isQuestionSavedProvider(questionId) — derived from saved list
+   - Screen: SavedQuestionsScreen — list of saved questions (same as question list)
+   - API: GET /admissionlife/saved-questions/
+          POST /admissionlife/saved-questions/ body: {"question": id}
+          DELETE /admissionlife/saved-questions/{id}/
+   - Idempotent save (POST same question twice is fine)
+
+5. Question Report:
+   - Provider: questionReportProvider
+   - UI: Bottom sheet with TextField for reason + Submit button
+   - API: POST /admissionlife/question-reports/ body: {"question": id, "reason": "..."}
+   - Show success snackbar after submit
+
+Add routes: /categories, /categories/:id/questions, /questions/:id, /saved-questions
+Wire up the "Question Bank" tab in bottom navigation to CategoryBrowseScreen.
+Wire up bookmark icon toggle across all question displays.
+---------------------------------------------------------------------------------
+
+
+================================================================================
+STEP 5: PRACTICE QUIZ + PROFILE + POLISH
+================================================================================
+
+What you get after this step:
+  - Practice quiz generation (pick categories + question counts)
+  - Practice quiz taking (no timer, relaxed mode)
+  - Detailed results with per-question breakdown
+  - Profile screen with stats
+  - Pull-to-refresh, error handling, loading states polished
+
+PROMPT 5:
+---------------------------------------------------------------------------------
+Continue building the admissionlife Flutter app. All features are done except
+Practice Quiz and Profile. Auth, batches, payments, exams with timer, leaderboards,
+question bank browsing, saved questions, and reports are complete.
+
+Now add the final features:
+
+1. Practice Quiz:
+   - Config Screen (PracticeQuizConfigScreen):
+     - Multi-select categories from the tree (show as chips)
+     - For each selected category: slider for question count (1-50)
+     - Toggle: "Include subcategories" per category
+     - "Generate Quiz" button
+   - Provider: practiceQuizConfigProvider (StateNotifier managing selections)
+     State: List<{categoryId, questionCount, includeSubcategories}>
+   - Generate flow:
+     a) POST /admissionlife/practice-quizzes/
+        Body: {"categories": [{"category_id": 5, "question_count": 10,
+               "include_subcategories": true}]}
+        Response: quiz object with id and questions (answers WITHOUT is_correct)
+     b) POST /admissionlife/practice-quizzes/{quiz_id}/start/
+        Response: {"attempt_id": 1, "questions": [...]}
+   - Taking Screen (PracticeQuizTakingScreen):
+     - Same PageView UI as exam but NO timer
+     - Questions show: question_text, question_image, 4 answer options
+     - User selects answer_id (not 1-4 number, but actual answer object ID)
+     - "Submit" button when ready
+     c) POST /admissionlife/practice-quizzes/{attempt_id}/submit/
+        Body: {"submissions": [{"question_id": 1, "selected_answer_id": 42}]}
+   - Result Screen (PracticeQuizResultScreen):
+     d) GET /admissionlife/practice-quizzes/{attempt_id}/result/
+     - Shows: score, is_completed
+     - Per-question breakdown:
+       - Question text
+       - User's selected answer (highlighted)
+       - Correct answer (green)
+       - Explanation text
+     - "Practice Again" button → back to config
+
+2. Profile Screen:
+   - Shows: user name, email, Google avatar
+   - Stats: enrolled batches count, exams completed, average score
+   - Quick links: Payment History, Saved Questions
+   - Logout button (clears tokens, navigates to /login)
+   - Provider: derives stats from existing providers
+
+3. Polish (apply across all screens):
+   - Pull-to-refresh: use RefreshIndicator + ref.invalidate(provider)
+   - Loading states: shimmer placeholders (use shimmer package)
+   - Error states: centered error message + "Retry" button
+   - Empty states: illustration + message (e.g., "No saved questions yet")
+   - Connectivity: show offline banner using connectivity_plus
+   - Snackbars: success (green), error (red) for all actions
+
+4. Wire up bottom navigation "Practice" tab to PracticeQuizConfigScreen.
+   Wire up "Profile" tab to ProfileScreen.
+
+Add routes: /practice-quiz/config, /practice-quiz/take/:quizId,
+/practice-quiz/result/:attemptId, /profile
+
+IMPORTANT difference from exam: Practice quiz uses answer IDs (selected_answer_id)
+not answer numbers (selected_answer: 1-4). The answers come as objects with id field.
+---------------------------------------------------------------------------------
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+Step 1: Foundation + Auth + Batches         → App boots, user logs in, sees batches
+Step 2: Payments + Enrollment + Exam List   → User pays, enrolls, sees locked exams
+Step 3: Exam Taking + Results + Leaderboard → User takes exams, sees scores & ranks
+Step 4: Question Bank + Saved + Reports     → User browses questions, bookmarks them
+Step 5: Practice Quiz + Profile + Polish    → User practices, sees profile, app is polished
+
+Each step produces a working app you can test before moving to the next.
+
+================================================================================

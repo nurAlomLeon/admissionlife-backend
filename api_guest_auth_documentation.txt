@@ -1,0 +1,280 @@
+================================================================================
+QBANK (API APP) — GUEST AUTHENTICATION SYSTEM DOCUMENTATION
+================================================================================
+
+Base URL: /api/
+
+This app supports TWO authentication modes:
+  1. Google Sign-In (registered users) — JWT token in Authorization header
+  2. Guest Mode (anonymous users) — custom headers, no registration required
+
+Both modes can access the same endpoints. The backend uses FlexibleAuthentication
+to detect which type of user is making the request.
+
+================================================================================
+AUTHENTICATION METHODS
+================================================================================
+
+METHOD 1: REGISTERED USER (Google Sign-In)
+------------------------------------------
+Header: Authorization: Bearer <jwt_access_token>
+
+Obtained via: POST /api/auth/google/ with Google OAuth access_token
+
+
+METHOD 2: GUEST USER (No registration needed)
+----------------------------------------------
+Headers (sent on EVERY request):
+  X-Guest-Token: <uuid>       ← generated client-side on first launch
+  X-Device-ID: <device_id>    ← unique device identifier (e.g., Android ID)
+
+The backend auto-creates a GuestUser record on the first request from a new device.
+No explicit "register" call is needed — just start sending these headers.
+
+However, there IS also an explicit login endpoint (recommended for Flutter):
+
+
+================================================================================
+ENDPOINTS
+================================================================================
+
+------------------------------------------------------------------------------
+1. GUEST LOGIN (Register/Retrieve Guest Session)
+------------------------------------------------------------------------------
+
+POST /api/auth/guest/
+
+Authentication: None required
+Permission: Public (no auth needed)
+
+Purpose: Creates a new guest user or retrieves an existing one based on device_id.
+         Use this on app first launch to get the guest_token.
+
+Request Body:
+{
+  "device_id": "a1b2c3d4e5f6-unique-device-identifier"
+}
+
+| Field     | Type   | Required | Constraints                    |
+|-----------|--------|----------|--------------------------------|
+| device_id | string | Yes      | Max 255 chars, unique per user |
+
+Response (200 OK):
+{
+  "guest_token": "550e8400-e29b-41d4-a716-446655440000",
+  "device_id": "a1b2c3d4e5f6-unique-device-identifier",
+  "is_new_guest": true,
+  "guest_data": {
+    "guest_id": "550e8400-e29b-41d4-a716-446655440000",
+    "device_id": "a1b2c3d4e5f6-unique-device-identifier",
+    "total_questions_answered": 0,
+    "total_quizzes_completed": 0,
+    "created_at": "2025-01-15T10:00:00Z",
+    "last_active": "2025-01-15T10:00:00Z"
+  }
+}
+
+| Field         | Type    | Description                                    |
+|---------------|---------|------------------------------------------------|
+| guest_token   | UUID    | Use as X-Guest-Token header on all requests    |
+| device_id     | string  | Echo back of the device ID sent                |
+| is_new_guest  | boolean | true if this is a brand new guest user         |
+| guest_data    | object  | Full guest user profile with stats             |
+
+Error (400):
+{
+  "device_id": ["This field is required."]
+}
+
+
+------------------------------------------------------------------------------
+2. SUBSEQUENT API REQUESTS (Guest Authentication)
+------------------------------------------------------------------------------
+
+After obtaining the guest_token from POST /api/auth/guest/, include these
+headers on ALL subsequent API requests:
+
+Headers:
+  X-Guest-Token: 550e8400-e29b-41d4-a716-446655440000
+  X-Device-ID: a1b2c3d4e5f6-unique-device-identifier
+
+The backend will:
+  1. Validate the UUID format of X-Guest-Token
+  2. Look up or create the GuestUser by device_id
+  3. Update last_active timestamp
+  4. Authenticate the request as a guest user
+
+If headers are missing or invalid → request is treated as unauthenticated (401).
+
+
+------------------------------------------------------------------------------
+3. GET GUEST STATS
+------------------------------------------------------------------------------
+
+GET /api/guest/stats/
+
+Authentication: Guest headers (X-Guest-Token + X-Device-ID)
+Permission: Guest users only (returns 400 for registered users)
+
+Response (200 OK):
+{
+  "guest_stats": {
+    "guest_id": "550e8400-e29b-41d4-a716-446655440000",
+    "total_questions_answered": 150,
+    "total_quizzes_completed": 12,
+    "account_age_days": 30,
+    "last_active": "2025-02-14T15:30:00Z"
+  },
+  "recent_activity": {
+    "questions_today": 25,
+    "quizzes_this_week": 3
+  }
+}
+
+
+------------------------------------------------------------------------------
+4. CONVERT GUEST TO REGISTERED USER
+------------------------------------------------------------------------------
+
+POST /api/auth/convert-guest/
+
+Authentication: Guest headers (X-Guest-Token + X-Device-ID)
+Permission: Guest users only
+
+Purpose: When a guest user decides to sign up (e.g., via Google Sign-In),
+         this endpoint transfers ALL their guest data (saved questions, quiz
+         attempts, progress, streaks) to the new registered account and
+         deletes the guest record.
+
+Request Body:
+{
+  "guest_id": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "user@example.com",
+  "name": "John Doe"
+}
+
+| Field    | Type   | Required | Description                    |
+|----------|--------|----------|--------------------------------|
+| guest_id | UUID   | Yes      | The guest's UUID token         |
+| email    | string | Yes      | Email for the new account      |
+| name     | string | Yes      | Full name (max 150 chars)      |
+
+Response (200 OK):
+{
+  "message": "Guest account successfully converted to registered user",
+  "user_id": 42,
+  "email": "user@example.com"
+}
+
+What gets transferred:
+  - Saved questions (guest_user → user)
+  - Quiz attempts and scores (guest_user → user)
+  - Daily targets (guest_user → user)
+  - Daily progress records (guest_user → user)
+  - Weekly progress records (guest_user → user)
+  - User activities log (guest_user → user)
+  - Streaks (guest_user → user)
+
+After conversion:
+  - The GuestUser record is deleted
+  - The user should switch to JWT authentication (Google Sign-In)
+  - All historical data is preserved under the new account
+
+Error (400 - not a guest):
+{
+  "error": "This endpoint is only for guest users"
+}
+
+Error (404 - guest not found):
+{
+  "error": "Guest user not found"
+}
+
+
+================================================================================
+FLUTTER IMPLEMENTATION GUIDE
+================================================================================
+
+STEP 1: First App Launch
+-------------------------
+1. Generate a device_id (use device_info_plus package for Android ID / iOS identifierForVendor)
+2. Call POST /api/auth/guest/ with {"device_id": "<device_id>"}
+3. Store the returned guest_token in secure storage
+4. Navigate to home screen
+
+STEP 2: All Subsequent Requests
+-------------------------------
+Add interceptor to Dio that attaches headers:
+
+  dio.interceptors.add(InterceptorsWrapper(
+    onRequest: (options, handler) {
+      if (isGuestMode) {
+        options.headers['X-Guest-Token'] = storedGuestToken;
+        options.headers['X-Device-ID'] = deviceId;
+      } else {
+        options.headers['Authorization'] = 'Bearer $jwtToken';
+      }
+      handler.next(options);
+    },
+  ));
+
+STEP 3: Guest → Registered User Conversion
+-------------------------------------------
+When user taps "Sign in with Google":
+1. Complete Google Sign-In flow
+2. Call POST /api/auth/convert-guest/ with guest_id + email + name
+3. Call POST /api/auth/google/ with Google access_token to get JWT
+4. Switch from guest headers to JWT Authorization header
+5. Clear stored guest_token
+6. All data is preserved seamlessly
+
+
+================================================================================
+GUEST USER CAPABILITIES & LIMITATIONS
+================================================================================
+
+WHAT GUESTS CAN DO:
+  ✓ Browse categories and questions
+  ✓ Take quizzes (practice, model tests, question bank)
+  ✓ Save/bookmark questions
+  ✓ Track daily targets and progress
+  ✓ Build streaks
+  ✓ View their stats
+
+WHAT GUESTS CANNOT DO:
+  ✗ Access admissionlife features (batches, payments, exams, leaderboards)
+  ✗ Report questions (requires registered user)
+  ✗ Appear on leaderboards
+
+
+================================================================================
+DATA MODEL
+================================================================================
+
+GuestUser Table:
+| Field                    | Type         | Description                    |
+|--------------------------|--------------|--------------------------------|
+| guest_id                 | UUID         | Auto-generated, unique, PK-like|
+| device_id                | VARCHAR(255) | Unique device identifier       |
+| total_questions_answered | INTEGER      | Lifetime question count        |
+| total_quizzes_completed  | INTEGER      | Lifetime quiz count            |
+| created_at               | DATETIME     | First visit timestamp          |
+| last_active              | DATETIME     | Auto-updated on each request   |
+
+Related tables that support guest_user FK:
+  - SavedQuestion (user OR guest_user)
+  - QuizAttempt (user OR guest_user)
+  - UserSubmission (via QuizAttempt)
+  - DailyTarget (user OR guest_user)
+  - DailyProgress (user OR guest_user)
+  - WeeklyProgress (user OR guest_user)
+  - UserActivity (user OR guest_user)
+  - Streak (user OR guest_user)
+
+Each of these tables has CHECK constraints ensuring exactly one of
+(user, guest_user) is set — never both, never neither.
+
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================

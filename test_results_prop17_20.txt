@@ -1,0 +1,141 @@
+﻿qbenv\Scripts\python.exe : Creating test database for alias 'default' 
+('file:memorydb_default?mode=memory&cache=shared')...
+At line:1 char:1
++ qbenv\Scripts\python.exe manage.py test admissionlife.tests.test_prop ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Creating test d...che=shared')... 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Found 11 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: allauth, corsheaders, dj_rest_auth, drf_spectacular, google, messages, registration, rest_framework, staticfiles
+  Apply all migrations: account, admin, admissionlife, api, auth, authtoken, contenttypes, sessions, sites, socialaccount
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying account.0001_initial... OK
+  Applying account.0002_email_max_length... OK
+  Applying account.0003_alter_emailaddress_create_unique_verified_email... OK
+  Applying account.0004_alter_emailaddress_drop_unique_email... OK
+  Applying account.0005_emailaddress_idx_upper_email... OK
+  Applying account.0006_emailaddress_lower... OK
+  Applying account.0007_emailaddress_idx_email... OK
+  Applying account.0008_emailaddress_unique_primary_email_fixup... OK
+  Applying account.0009_emailaddress_unique_primary_email... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying admissionlife.0001_initial... OK
+  Applying api.0001_initial... OK
+  Applying api.0002_category_label_remove_reportedquestion_question_and_more... OK
+  Applying api.0003_answer_image_question_explanation_image_and_more... OK
+  Applying api.0004_previousyearquiz... OK
+  Applying api.0005_alter_category_options_category_level_category_order_and_more... OK
+  Applying api.0006_remove_progress_models... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying authtoken.0001_initial... OK
+  Applying authtoken.0002_auto_20160226_1747... OK
+  Applying authtoken.0003_tokenproxy... OK
+  Applying authtoken.0004_alter_tokenproxy_options... OK
+  Applying sessions.0001_initial... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+  Applying socialaccount.0001_initial... OK
+  Applying socialaccount.0002_token_max_lengths... OK
+  Applying socialaccount.0003_extra_data_default_dict... OK
+  Applying socialaccount.0004_app_provider_id_settings... OK
+  Applying socialaccount.0005_socialtoken_nullable_app... OK
+C:\Users\user\Desktop\django\qbank-dj\qbenv\Lib\site-packages\dj_rest_auth\regi
+stration\serializers.py:228: UserWarning: app_settings.USERNAME_REQUIRED is 
+deprecated, use: app_settings.SIGNUP_FIELDS['username']['required']
+  required=allauth_account_settings.USERNAME_REQUIRED,
+C:\Users\user\Desktop\django\qbank-dj\qbenv\Lib\site-packages\dj_rest_auth\regi
+stration\serializers.py:230: UserWarning: app_settings.EMAIL_REQUIRED is 
+deprecated, use: app_settings.SIGNUP_FIELDS['email']['required']
+  email = 
+serializers.EmailField(required=allauth_account_settings.EMAIL_REQUIRED)
+C:\Users\user\Desktop\django\qbank-dj\qbenv\Lib\site-packages\dj_rest_auth\regi
+stration\serializers.py:288: UserWarning: app_settings.EMAIL_REQUIRED is 
+deprecated, use: app_settings.SIGNUP_FIELDS['email']['required']
+  email = 
+serializers.EmailField(required=allauth_account_settings.EMAIL_REQUIRED)
+System check identified some issues:
+
+WARNINGS:
+?: settings.ACCOUNT_AUTHENTICATION_METHOD is deprecated, use: 
+settings.ACCOUNT_LOGIN_METHODS = {'email'}
+?: settings.ACCOUNT_EMAIL_REQUIRED is deprecated, use: 
+settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+?: settings.ACCOUNT_USERNAME_REQUIRED is deprecated, use: 
+settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
+System check identified 3 issues (0 silenced).
+test_all_exams_completed_all_accessible (admissionlife.tests.test_properties.Te
+stProperty17PreRecordedBatchSequentialExamAccess.test_all_exams_completed_all_a
+ccessible)
+When all exams are completed, all should remain accessible. ... ok
+test_completed_exams_and_next_are_accessible (admissionlife.tests.test_properti
+es.TestProperty17PreRecordedBatchSequentialExamAccess.test_completed_exams_and_
+next_are_accessible)
+After completing exams up to order N, the user should have access to all ... ok
+test_newly_enrolled_user_only_accesses_lowest_order_exam (admissionlife.tests.t
+est_properties.TestProperty17PreRecordedBatchSequentialExamAccess.test_newly_en
+rolled_user_only_accesses_lowest_order_exam)
+A newly enrolled user with no completions should only have access ... ok
+test_is_unlocked_flag_matches_can_access_exam (admissionlife.tests.test_propert
+ies.TestProperty18PreRecordedBatchIsUnlockedFlagConsistency.test_is_unlocked_fl
+ag_matches_can_access_exam)
+The is_unlocked flag from get_accessible_exams should be consistent with ... ok
+test_completing_exam_unlocks_next_order_value (admissionlife.tests.test_propert
+ies.TestProperty19SameOrderExamsUnlockTogether.test_completing_exam_unlocks_nex
+t_order_value)
+Completing an exam at order N should unlock the exam at the next order ... ok
+test_sequential_completion_unlocks_exactly_next_order (admissionlife.tests.test
+_properties.TestProperty19SameOrderExamsUnlockTogether.test_sequential_completi
+on_unlocks_exactly_next_order)
+After completing exams at orders [o1, ..., oK], exactly the exams at ... ok
+test_exam_accessible_when_current_time_past_unlock (admissionlife.tests.test_pr
+operties.TestProperty20LiveBatchTimeBasedExamAccess.test_exam_accessible_when_c
+urrent_time_past_unlock)
+When the current server datetime >= unlock_datetime, the exam should ... ok
+test_exam_not_accessible_when_current_time_before_unlock (admissionlife.tests.t
+est_properties.TestProperty20LiveBatchTimeBasedExamAccess.test_exam_not_accessi
+ble_when_current_time_before_unlock)
+When the current server datetime < unlock_datetime, the exam should ... ok
+test_exam_not_accessible_when_unlock_datetime_is_null (admissionlife.tests.test
+_properties.TestProperty20LiveBatchTimeBasedExamAccess.test_exam_not_accessible
+_when_unlock_datetime_is_null)
+When unlock_datetime is null, the exam should NOT be accessible. ... ok
+test_get_accessible_exams_is_unlocked_flag_for_live_batch (admissionlife.tests.
+test_properties.TestProperty20LiveBatchTimeBasedExamAccess.test_get_accessible_
+exams_is_unlocked_flag_for_live_batch)
+The is_unlocked flag in get_accessible_exams should be True for exams ... ok
+test_updated_unlock_datetime_to_future_denies_access (admissionlife.tests.test_
+properties.TestProperty20LiveBatchTimeBasedExamAccess.test_updated_unlock_datet
+ime_to_future_denies_access)
+If an Admin updates an Exam's unlock_datetime to a future value after ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 88.545s
+
+OK
+Destroying test database for alias 'default' 
+('file:memorydb_default?mode=memory&cache=shared')...
+
+  Applying socialaccount.0006_alter_socialaccount_extra_data... OK

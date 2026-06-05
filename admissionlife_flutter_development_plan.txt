@@ -1,0 +1,670 @@
+================================================================================
+ADMISSIONLIFE FLUTTER MOBILE APP — DEVELOPMENT PLAN
+================================================================================
+
+Project: AdmissionLife
+Backend: Django REST API (api/admissionlife/)
+State Management: Riverpod (flutter_riverpod + riverpod_annotation)
+Architecture: Clean Architecture (Data → Domain → Presentation)
+Auth: Google Sign-In with JWT tokens
+
+================================================================================
+1. TECH STACK & DEPENDENCIES
+================================================================================
+
+Core:
+  - flutter_riverpod / riverpod_annotation / riverpod_generator
+  - dio (HTTP client with interceptors)
+  - go_router (navigation)
+  - google_sign_in (Google OAuth)
+  - flutter_secure_storage (token storage)
+  - freezed / json_serializable (model generation)
+  - cached_network_image (image caching)
+
+UI:
+  - flutter_screenutil (responsive sizing)
+  - shimmer (loading skeletons)
+  - lottie (animations)
+  - flutter_svg
+  - pull_to_refresh_flutter3
+
+Utilities:
+  - connectivity_plus (network status)
+  - shared_preferences (local settings)
+  - intl (date formatting)
+  - flutter_local_notifications (reminders)
+
+Dev:
+  - build_runner
+  - riverpod_lint
+  - very_good_analysis (lint rules)
+
+================================================================================
+2. PROJECT STRUCTURE
+================================================================================
+
+lib/
+├── main.dart
+├── app.dart
+├── core/
+│   ├── constants/
+│   │   ├── api_endpoints.dart
+│   │   ├── app_colors.dart
+│   │   ├── app_text_styles.dart
+│   │   └── app_constants.dart
+│   ├── network/
+│   │   ├── dio_client.dart
+│   │   ├── api_interceptor.dart
+│   │   ├── auth_interceptor.dart
+│   │   └── api_exceptions.dart
+│   ├── router/
+│   │   └── app_router.dart
+│   ├── utils/
+│   │   ├── extensions.dart
+│   │   └── validators.dart
+│   └── widgets/
+│       ├── app_scaffold.dart
+│       ├── loading_widget.dart
+│       ├── error_widget.dart
+│       ├── empty_state_widget.dart
+│       └── paginated_list.dart
+├── features/
+│   ├── auth/
+│   │   ├── data/
+│   │   │   ├── auth_repository.dart
+│   │   │   └── models/
+│   │   │       └── user_model.dart
+│   │   ├── providers/
+│   │   │   └── auth_provider.dart
+│   │   └── presentation/
+│   │       ├── login_screen.dart
+│   │       └── widgets/
+│   │           └── google_sign_in_button.dart
+│   ├── batches/
+│   │   ├── data/
+│   │   │   ├── batch_repository.dart
+│   │   │   └── models/
+│   │   │       └── batch_model.dart
+│   │   ├── providers/
+│   │   │   └── batch_provider.dart
+│   │   └── presentation/
+│   │       ├── batch_list_screen.dart
+│   │       ├── batch_detail_screen.dart
+│   │       └── widgets/
+│   │           └── batch_card.dart
+│   ├── payments/
+│   │   ├── data/
+│   │   │   ├── payment_repository.dart
+│   │   │   └── models/
+│   │   │       └── payment_model.dart
+│   │   ├── providers/
+│   │   │   └── payment_provider.dart
+│   │   └── presentation/
+│   │       ├── payment_submit_screen.dart
+│   │       ├── payment_history_screen.dart
+│   │       └── widgets/
+│   │           ├── payment_form.dart
+│   │           └── payment_card.dart
+│   ├── exams/
+│   │   ├── data/
+│   │   │   ├── exam_repository.dart
+│   │   │   └── models/
+│   │   │       ├── exam_model.dart
+│   │   │       ├── exam_question_model.dart
+│   │   │       └── exam_attempt_model.dart
+│   │   ├── providers/
+│   │   │   └── exam_provider.dart
+│   │   └── presentation/
+│   │       ├── exam_list_screen.dart
+│   │       ├── exam_taking_screen.dart
+│   │       ├── exam_result_screen.dart
+│   │       └── widgets/
+│   │           ├── exam_card.dart
+│   │           ├── question_widget.dart
+│   │           ├── answer_option.dart
+│   │           ├── timer_widget.dart
+│   │           └── score_card.dart
+│   ├── leaderboard/
+│   │   ├── data/
+│   │   │   ├── leaderboard_repository.dart
+│   │   │   └── models/
+│   │   │       └── leaderboard_entry_model.dart
+│   │   ├── providers/
+│   │   │   └── leaderboard_provider.dart
+│   │   └── presentation/
+│   │       ├── batch_leaderboard_screen.dart
+│   │       ├── exam_leaderboard_screen.dart
+│   │       └── widgets/
+│   │           ├── leaderboard_tile.dart
+│   │           └── current_user_rank.dart
+│   ├── question_bank/
+│   │   ├── data/
+│   │   │   ├── category_repository.dart
+│   │   │   ├── question_repository.dart
+│   │   │   └── models/
+│   │   │       ├── category_model.dart
+│   │   │       ├── question_model.dart
+│   │   │       ├── answer_model.dart
+│   │   │       └── label_model.dart
+│   │   ├── providers/
+│   │   │   ├── category_provider.dart
+│   │   │   └── question_provider.dart
+│   │   └── presentation/
+│   │       ├── category_browse_screen.dart
+│   │       ├── question_list_screen.dart
+│   │       ├── question_detail_screen.dart
+│   │       └── widgets/
+│   │           ├── category_tree_widget.dart
+│   │           ├── category_chip.dart
+│   │           ├── question_card.dart
+│   │           └── answer_tile.dart
+│   ├── saved_questions/
+│   │   ├── data/
+│   │   │   ├── saved_question_repository.dart
+│   │   │   └── models/
+│   │   │       └── saved_question_model.dart
+│   │   ├── providers/
+│   │   │   └── saved_question_provider.dart
+│   │   └── presentation/
+│   │       ├── saved_questions_screen.dart
+│   │       └── widgets/
+│   │           └── saved_question_card.dart
+│   ├── practice_quiz/
+│   │   ├── data/
+│   │   │   ├── practice_quiz_repository.dart
+│   │   │   └── models/
+│   │   │       ├── practice_quiz_model.dart
+│   │   │       └── quiz_attempt_model.dart
+│   │   ├── providers/
+│   │   │   └── practice_quiz_provider.dart
+│   │   └── presentation/
+│   │       ├── practice_quiz_config_screen.dart
+│   │       ├── practice_quiz_taking_screen.dart
+│   │       ├── practice_quiz_result_screen.dart
+│   │       └── widgets/
+│   │           ├── category_selector.dart
+│   │           ├── question_count_slider.dart
+│   │           └── quiz_result_card.dart
+│   └── profile/
+│       ├── providers/
+│       │   └── profile_provider.dart
+│       └── presentation/
+│           ├── profile_screen.dart
+│           └── widgets/
+│               └── stats_card.dart
+└── shared/
+    ├── models/
+    │   └── pagination_model.dart
+    └── providers/
+        └── connectivity_provider.dart
+
+================================================================================
+3. FEATURES & SCREENS BREAKDOWN
+================================================================================
+
+------------------------------------------------------------------------------
+FEATURE 1: AUTHENTICATION
+------------------------------------------------------------------------------
+
+Screens:
+  - Splash Screen (auto-login check)
+  - Login Screen (Google Sign-In button)
+
+Providers:
+  - authStateProvider: AsyncNotifier<User?>
+    - Manages login/logout state
+    - Stores JWT tokens in flutter_secure_storage
+    - Auto-refreshes expired access tokens via interceptor
+
+API Calls:
+  - POST /api/auth/google/ (send Google access_token, receive JWT)
+  - POST /api/auth/token/refresh/ (refresh expired token)
+
+Flow:
+  1. User taps "Sign in with Google"
+  2. google_sign_in package gets Google access_token
+  3. Send to backend → receive JWT access + refresh tokens
+  4. Store tokens securely
+  5. Navigate to Home
+
+------------------------------------------------------------------------------
+FEATURE 2: BATCH BROWSING & ENROLLMENT
+------------------------------------------------------------------------------
+
+Screens:
+  - Batch List Screen (grid/list of available batches)
+  - Batch Detail Screen (description, exam count, enrollment count, price)
+  - Payment Submit Screen (after selecting a batch)
+
+Providers:
+  - batchListProvider: AsyncNotifier<List<Batch>>
+  - batchDetailProvider(id): FutureProvider.family
+  - enrollmentCheckProvider(batchId): FutureProvider.family
+
+API Calls:
+  - GET /api/admissionlife/batches/
+  - GET /api/admissionlife/batches/{id}/
+  - GET /api/admissionlife/enrollments/check/{batch_id}/
+
+Flow:
+  1. Home screen shows list of active batches
+  2. Tap batch → detail screen with enroll button
+  3. If not enrolled → show payment form
+  4. If enrolled → show "Go to Exams" button
+
+------------------------------------------------------------------------------
+FEATURE 3: PAYMENT SYSTEM
+------------------------------------------------------------------------------
+
+Screens:
+  - Payment Submit Screen (form with method, txn ID, sender, amount)
+  - Payment History Screen (list of user's payments with status)
+
+Providers:
+  - paymentSubmitProvider: AsyncNotifier (handles form submission)
+  - paymentHistoryProvider: AsyncNotifier<List<Payment>>
+
+API Calls:
+  - POST /api/admissionlife/payments/
+  - GET /api/admissionlife/payments/
+
+Flow:
+  1. User selects payment method (bKash/Nagad/Rocket/Upay)
+  2. Enters transaction ID, sender number, amount
+  3. Submits → status becomes PENDING
+  4. Admin approves/rejects from Django admin
+  5. User sees updated status in payment history
+
+Validation (client-side):
+  - sender_number: 11 digits, starts with "01"
+  - transaction_id: non-empty, max 30 chars
+  - amount: matches batch price
+
+------------------------------------------------------------------------------
+FEATURE 4: EXAM SYSTEM
+------------------------------------------------------------------------------
+
+Screens:
+  - Exam List Screen (shows exams in enrolled batch with lock/unlock status)
+  - Exam Taking Screen (questions with timer, answer selection)
+  - Exam Result Screen (score breakdown, correct/incorrect/unanswered)
+
+Providers:
+  - examListProvider(batchId): AsyncNotifier<List<Exam>>
+  - examAttemptProvider: StateNotifier (manages current attempt state)
+  - examResultProvider(attemptId): FutureProvider.family
+
+API Calls:
+  - GET /api/admissionlife/exams/?batch={id}
+  - POST /api/admissionlife/exam-attempts/{exam_id}/start/
+  - POST /api/admissionlife/exam-attempts/{attempt_id}/submit/
+  - GET /api/admissionlife/exam-attempts/{attempt_id}/result/
+
+Flow:
+  1. User sees exam list with lock icons
+  2. Taps unlocked exam → confirmation dialog
+  3. Start attempt → receive questions (no correct answers shown)
+  4. Timer counts down (duration_minutes)
+  5. User selects answers (can skip)
+  6. Submit → see result with score breakdown
+
+UI Components:
+  - Countdown timer (top bar)
+  - Question navigator (bottom dots/numbers)
+  - Answer radio buttons (A/B/C/D)
+  - "Mark for review" flag
+  - Submit confirmation dialog
+  - Score card with +1/-0.25/0 breakdown
+
+------------------------------------------------------------------------------
+FEATURE 5: LEADERBOARD
+------------------------------------------------------------------------------
+
+Screens:
+  - Batch Leaderboard Screen (aggregated scores across all exams)
+  - Exam Leaderboard Screen (per-exam best scores)
+
+Providers:
+  - batchLeaderboardProvider(batchId): AsyncNotifier<LeaderboardData>
+  - examLeaderboardProvider(examId): AsyncNotifier<LeaderboardData>
+
+API Calls:
+  - GET /api/admissionlife/batches/{batch_id}/leaderboard/
+  - GET /api/admissionlife/exams/{exam_id}/leaderboard/
+
+UI Components:
+  - Top 3 podium (gold/silver/bronze)
+  - Scrollable ranked list
+  - Current user's rank (sticky bottom card)
+  - Pull-to-refresh
+
+------------------------------------------------------------------------------
+FEATURE 6: QUESTION BANK BROWSING
+------------------------------------------------------------------------------
+
+Screens:
+  - Category Browse Screen (hierarchical: Subject → Part → Topic)
+  - Question List Screen (filtered by category)
+  - Question Detail Screen (full question with answers + explanation)
+
+Providers:
+  - categoryTreeProvider: AsyncNotifier<List<CategoryTree>>
+  - categoryChildrenProvider(parentId): FutureProvider.family
+  - questionListProvider(categoryId): AsyncNotifier<PaginatedList<Question>>
+
+API Calls:
+  - GET /api/admissionlife/categories/tree/
+  - GET /api/admissionlife/categories/?parent={id}
+  - GET /api/admissionlife/categories/{id}/children/
+  - GET /api/admissionlife/questions/?category={id}&category_level=all
+  - GET /api/admissionlife/questions/{id}/
+
+Flow:
+  1. User browses Subject → Part → Topic hierarchy
+  2. Taps a topic → sees questions in that category
+  3. Taps question → sees full detail with answers revealed
+  4. Can bookmark (save) questions from here
+
+UI Components:
+  - Expandable tree view OR breadcrumb navigation
+  - Question cards with preview text
+  - Answer options with correct/incorrect indicators
+  - Explanation section (collapsible)
+  - Bookmark (save) icon on each question
+
+------------------------------------------------------------------------------
+FEATURE 7: SAVED QUESTIONS (BOOKMARKS)
+------------------------------------------------------------------------------
+
+Screens:
+  - Saved Questions Screen (list of bookmarked questions)
+
+Providers:
+  - savedQuestionsProvider: AsyncNotifier<List<SavedQuestion>>
+  - toggleSaveProvider: method on question provider
+
+API Calls:
+  - GET /api/admissionlife/saved-questions/
+  - POST /api/admissionlife/saved-questions/ (save)
+  - DELETE /api/admissionlife/saved-questions/{id}/ (unsave)
+
+Flow:
+  1. User taps bookmark icon on any question
+  2. Question is saved (idempotent)
+  3. Saved Questions screen shows all bookmarks
+  4. Can unsave from the list
+
+------------------------------------------------------------------------------
+FEATURE 8: QUESTION REPORTING
+------------------------------------------------------------------------------
+
+Providers:
+  - questionReportProvider: AsyncNotifier (handles submission)
+
+API Calls:
+  - POST /api/admissionlife/question-reports/
+
+Flow:
+  1. User taps "Report" on a question
+  2. Bottom sheet with reason text field
+  3. Submit → confirmation toast
+
+------------------------------------------------------------------------------
+FEATURE 9: PRACTICE QUIZ
+------------------------------------------------------------------------------
+
+Screens:
+  - Practice Quiz Config Screen (select categories + question counts)
+  - Practice Quiz Taking Screen (questions without correct answers)
+  - Practice Quiz Result Screen (detailed per-question breakdown)
+
+Providers:
+  - practiceQuizConfigProvider: StateNotifier<List<CategorySelection>>
+  - practiceQuizProvider: AsyncNotifier (generate, start, submit)
+  - practiceQuizResultProvider(attemptId): FutureProvider.family
+
+API Calls:
+  - POST /api/admissionlife/practice-quizzes/ (generate)
+  - POST /api/admissionlife/practice-quizzes/{quiz_id}/start/
+  - POST /api/admissionlife/practice-quizzes/{attempt_id}/submit/
+  - GET /api/admissionlife/practice-quizzes/{attempt_id}/result/
+
+Flow:
+  1. User selects categories (with subcategory toggle)
+  2. Sets question count per category (slider)
+  3. Generate quiz → receive questions
+  4. Start attempt → take quiz (no timer pressure)
+  5. Submit → see detailed results with explanations
+
+UI Components:
+  - Category multi-select with chips
+  - Question count slider per category
+  - "Include subcategories" toggle
+  - Quiz taking interface (same as exam but no timer)
+  - Result: per-question correct/incorrect with explanation
+
+------------------------------------------------------------------------------
+FEATURE 10: PROFILE & SETTINGS
+------------------------------------------------------------------------------
+
+Screens:
+  - Profile Screen (user info, enrolled batches, stats)
+
+Providers:
+  - profileProvider: AsyncNotifier<UserProfile>
+
+Data shown:
+  - User name, email, avatar (from Google)
+  - Enrolled batches list
+  - Total exams completed
+  - Average score
+  - Saved questions count
+  - Logout button
+
+================================================================================
+4. RIVERPOD STATE MANAGEMENT ARCHITECTURE
+================================================================================
+
+Provider Types Used:
+  - AsyncNotifierProvider: For data that loads from API and can be refreshed
+  - FutureProvider.family: For single-resource fetches (detail screens)
+  - StateNotifierProvider: For complex local state (quiz taking, form state)
+  - Provider: For computed/derived values
+
+Token Management:
+  - authTokenProvider: stores access + refresh tokens
+  - Dio interceptor reads token from provider
+  - On 401 → auto-refresh → retry request
+  - On refresh failure → logout → redirect to login
+
+Caching Strategy:
+  - keepAlive on frequently accessed providers (categories, batch list)
+  - autoDispose on detail/one-time providers
+  - ref.invalidate() for pull-to-refresh
+
+Error Handling:
+  - AsyncValue.when() pattern on all async providers
+  - Global error handler in Dio interceptor
+  - Snackbar/toast for user-facing errors
+  - Retry button on error states
+
+================================================================================
+5. NAVIGATION (go_router)
+================================================================================
+
+Routes:
+  /splash                          → SplashScreen
+  /login                           → LoginScreen
+  /home                            → HomeScreen (bottom nav)
+  /batches                         → BatchListScreen
+  /batches/:id                     → BatchDetailScreen
+  /batches/:id/payment             → PaymentSubmitScreen
+  /batches/:id/exams               → ExamListScreen
+  /batches/:id/leaderboard         → BatchLeaderboardScreen
+  /exams/:id/start                 → ExamTakingScreen
+  /exams/:id/leaderboard           → ExamLeaderboardScreen
+  /exam-results/:attemptId         → ExamResultScreen
+  /categories                      → CategoryBrowseScreen
+  /categories/:id/questions        → QuestionListScreen
+  /questions/:id                   → QuestionDetailScreen
+  /saved-questions                 → SavedQuestionsScreen
+  /practice-quiz/config            → PracticeQuizConfigScreen
+  /practice-quiz/take/:quizId      → PracticeQuizTakingScreen
+  /practice-quiz/result/:attemptId → PracticeQuizResultScreen
+  /payments                        → PaymentHistoryScreen
+  /profile                         → ProfileScreen
+
+Bottom Navigation Tabs:
+  1. Home (batches overview)
+  2. Question Bank (categories)
+  3. Practice (quiz config)
+  4. Profile
+
+Guards:
+  - Redirect to /login if not authenticated
+  - Redirect to /home if already authenticated on /login
+
+================================================================================
+6. DEVELOPMENT PHASES
+================================================================================
+
+PHASE 1: Foundation (Week 1-2)
+  - Project setup with folder structure
+  - Dio client with auth interceptor
+  - Google Sign-In integration
+  - Token storage and auto-refresh
+  - Base widgets (loading, error, empty states)
+  - Navigation setup with go_router
+  - Model classes with freezed/json_serializable
+
+PHASE 2: Core Features (Week 3-4)
+  - Batch list and detail screens
+  - Payment submission and history
+  - Enrollment check
+  - Exam list with lock/unlock UI
+
+PHASE 3: Exam System (Week 5-6)
+  - Exam taking screen with timer
+  - Question navigation
+  - Answer selection and submission
+  - Result screen with score breakdown
+  - Leaderboard screens
+
+PHASE 4: Question Bank (Week 7-8)
+  - Category tree browsing
+  - Question list with filtering
+  - Question detail with answers
+  - Saved questions (bookmarks)
+  - Question reporting
+
+PHASE 5: Practice Quiz (Week 9)
+  - Quiz configuration (category selection)
+  - Quiz taking (no timer)
+  - Quiz result with per-question breakdown
+
+PHASE 6: Polish & Release (Week 10)
+  - Profile screen
+  - Pull-to-refresh everywhere
+  - Offline handling (connectivity checks)
+  - Loading skeletons
+  - Error retry patterns
+  - App icon, splash screen
+  - Play Store listing
+
+================================================================================
+7. API ENDPOINTS SUMMARY (for Dio client)
+================================================================================
+
+class ApiEndpoints {
+  static const String baseUrl = 'https://your-domain.com/api';
+
+  // Auth
+  static const String googleLogin = '/auth/google/';
+  static const String tokenRefresh = '/auth/token/refresh/';
+
+  // Batches
+  static const String batches = '/admissionlife/batches/';
+  static String batchDetail(int id) => '/admissionlife/batches/$id/';
+  static String batchLeaderboard(int id) => '/admissionlife/batches/$id/leaderboard/';
+
+  // Payments
+  static const String payments = '/admissionlife/payments/';
+  static String approvePayment(int id) => '/admissionlife/payments/$id/approve/';
+  static String rejectPayment(int id) => '/admissionlife/payments/$id/reject/';
+
+  // Enrollments
+  static String enrollmentCheck(int batchId) => '/admissionlife/enrollments/check/$batchId/';
+
+  // Exams
+  static const String exams = '/admissionlife/exams/';
+  static String examDetail(int id) => '/admissionlife/exams/$id/';
+  static String examLeaderboard(int id) => '/admissionlife/exams/$id/leaderboard/';
+
+  // Exam Attempts
+  static String startExam(int examId) => '/admissionlife/exam-attempts/$examId/start/';
+  static String submitExam(int attemptId) => '/admissionlife/exam-attempts/$attemptId/submit/';
+  static String examResult(int attemptId) => '/admissionlife/exam-attempts/$attemptId/result/';
+
+  // Categories
+  static const String categories = '/admissionlife/categories/';
+  static const String categoryTree = '/admissionlife/categories/tree/';
+  static String categoryChildren(int id) => '/admissionlife/categories/$id/children/';
+
+  // Questions
+  static const String questions = '/admissionlife/questions/';
+  static String questionDetail(int id) => '/admissionlife/questions/$id/';
+
+  // Saved Questions
+  static const String savedQuestions = '/admissionlife/saved-questions/';
+  static String deleteSavedQuestion(int id) => '/admissionlife/saved-questions/$id/';
+
+  // Question Reports
+  static const String questionReports = '/admissionlife/question-reports/';
+
+  // Practice Quizzes
+  static const String practiceQuizzes = '/admissionlife/practice-quizzes/';
+  static String startPracticeQuiz(int quizId) => '/admissionlife/practice-quizzes/$quizId/start/';
+  static String submitPracticeQuiz(int attemptId) => '/admissionlife/practice-quizzes/$attemptId/submit/';
+  static String practiceQuizResult(int attemptId) => '/admissionlife/practice-quizzes/$attemptId/result/';
+}
+
+================================================================================
+8. KEY IMPLEMENTATION NOTES
+================================================================================
+
+1. EXAM TIMER:
+   - Use a Riverpod StateNotifier with a Timer.periodic
+   - Auto-submit when timer reaches 0
+   - Show warning at 5 minutes and 1 minute remaining
+
+2. QUESTION NAVIGATION (Exam/Quiz):
+   - PageView for swiping between questions
+   - Bottom bar with question number indicators
+   - Color-coded: answered (green), unanswered (gray), flagged (orange)
+
+3. OFFLINE HANDLING:
+   - Show banner when offline
+   - Disable submit buttons
+   - Cache category tree and batch list locally
+
+4. IMAGE HANDLING:
+   - Questions/answers can have images
+   - Use CachedNetworkImage with placeholder
+   - Pinch-to-zoom on question images
+
+5. PAGINATION:
+   - Use infinite scroll with ScrollController
+   - Load next page when near bottom
+   - Show loading indicator at bottom
+
+6. PULL-TO-REFRESH:
+   - ref.invalidate(provider) on pull
+   - Available on all list screens
+
+7. DEEP LINKING:
+   - Support opening specific batch/exam from notifications
+   - go_router handles deep link parsing
+
+================================================================================
+END OF DEVELOPMENT PLAN
+================================================================================
