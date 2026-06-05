@@ -1,0 +1,9 @@
+- name: Sync Files to cPanel via SSH
+      uses: easingthemes/ssh-deploy@main
+      with:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        REMOTE_HOST: ${{ secrets.SSH_HOST }}
+        REMOTE_USER: ${{ secrets.SSH_USER }}
+        TARGET: "/home/mcqsolve/admission.mcqsolver.com/"
+        EXCLUDE: "/.git/, /.github/"
+        # Add the line below so the robot knows the password:
