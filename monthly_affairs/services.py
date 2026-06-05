@@ -10,8 +10,6 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 from django.db import transaction
-from django.utils import timezone
-
 from .models import MonthlyAffairsBlock, MonthlyAffairsIssue
 
 
@@ -122,14 +120,23 @@ class MonthlyAffairsScraper:
         )
         parsed_issues = self.parse_html(html)
 
-        if target_year is None or target_month_name is None:
-            current_date = timezone.localdate()
-            target_year = current_date.year
-            target_month_name = current_date.strftime('%B')
+        if (target_year is None or target_month_name is None) and parsed_issues:
+            latest_issue = max(
+                parsed_issues,
+                key=lambda issue: (issue.year, issue.month_number or 0),
+            )
+            target_year = latest_issue.year
+            target_month_name = latest_issue.month_name
 
         parsed_issues = [
             issue for issue in parsed_issues
-            if issue.year == target_year and issue.month_name == target_month_name
+            if (
+                (target_year is None or issue.year == target_year)
+                and (
+                    target_month_name is None
+                    or issue.month_name.lower() == target_month_name.lower()
+                )
+            )
         ]
 
         created_count = 0

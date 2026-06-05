@@ -3,8 +3,9 @@
 This app scrapes `https://uttoron.academy/MonthlyAffairs`, normalizes the page
 into issues and blocks, and stores the cleaned result in the local database.
 
-By default, the scraper only syncs the current month, so a daily cron job just
-checks whether Uttoron added new entries to this month.
+By default, the scraper syncs the latest available published month from the
+Monthly Affairs page, so a daily cron job just checks whether Uttoron added new
+entries to the newest issue.
 
 ## Manual Run
 
