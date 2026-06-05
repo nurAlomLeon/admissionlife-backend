@@ -1,0 +1,13 @@
+# Database
+db.sqlite3
+
+# Server Configurations
+passenger_wsgi.py
+.htaccess
+
+# Virtual Environments & Caches (Best practice for Python/Django)
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
