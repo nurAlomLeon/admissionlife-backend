@@ -485,3 +485,26 @@ class Streak(models.Model):
         user_identifier = str(self.user.username) if self.user else f"Guest {str(self.guest_user.guest_id)}"
         target_display = self.get_target_type_display()
         return f"{user_identifier} - {target_display} - Current: {self.current_streak}, Best: {self.longest_streak}"
+
+# ===================================================================
+# MODEL FOR HOME SCREEN PROMOTIONAL BANNER
+# ===================================================================
+
+class HomeBannerNotification(models.Model):
+    """Model to configure promotional banner on the home screen."""
+    title = models.CharField(max_length=255, help_text="Main text of the banner")
+    subtitle = models.CharField(max_length=255, blank=True, null=True, help_text="Optional subtitle text below the main title")
+    button_text = models.CharField(max_length=50, help_text="Text to display on the action button")
+    batch_id = models.PositiveIntegerField(null=True, blank=True, help_text="Optional ID of the batch to promote. Tapping button opens this batch.")
+    is_active = models.BooleanField(default=False, help_text="If multiple are active, the most recently updated one will be shown.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Home Banner Notification"
+        verbose_name_plural = "Home Banner Notifications"
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        status = "Active" if self.is_active else "Inactive"
+        return f"[{status}] {str(self.title)}"

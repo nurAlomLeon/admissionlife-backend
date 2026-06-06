@@ -26,6 +26,7 @@ router.register(r'streaks', StreakViewSet, basename='streak')
 urlpatterns = [
     path('', include(router.urls)),
     
+    path('active-banner/', ActiveHomeBannerView.as_view(), name='active-banner'),
     path('create-model-test/', CreateModelTestView.as_view(), name='create-model-test'),
     path('results/<int:attempt_id>/', QuizResultView.as_view(), name='quiz-result-detail'),
     path('dashboard/', ProgressDashboardView.as_view(), name='progress-dashboard'),

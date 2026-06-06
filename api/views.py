@@ -1425,3 +1425,22 @@ def update_streak(user, guest_user, target_type, activity_date=None):
     
     streak.update_streak(activity_date)
     return streak
+
+# ===================================================================
+# HOME BANNER VIEW
+# ===================================================================
+
+class ActiveHomeBannerView(APIView):
+    """
+    Returns the most recently updated active home banner notification, if any.
+    Publicly accessible endpoint.
+    """
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        banner = HomeBannerNotification.objects.filter(is_active=True).first()
+        if banner:
+            serializer = HomeBannerNotificationSerializer(banner)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({}, status=status.HTTP_200_OK)

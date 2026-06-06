@@ -11,7 +11,7 @@ from .models import (
     Category, GuestUser, Label, Question, Answer, Quiz, SavedQuestion, 
     QuestionReport, PreviousYearQuiz, QuizAttempt, QuizCategory,
     UserSubmission, DailyTarget, DailyProgress, WeeklyProgress, 
-    UserActivity, Streak
+    UserActivity, Streak, HomeBannerNotification
 )
 from .forms import CsvImportForm
 
@@ -445,3 +445,9 @@ class StreakAdmin(admin.ModelAdmin):
             return obj.user.username
         return f"Guest {obj.guest_user.guest_id}"
     get_user_identifier.short_description = 'User'
+
+@admin.register(HomeBannerNotification)
+class HomeBannerNotificationAdmin(admin.ModelAdmin):
+    list_display = ['title', 'is_active', 'updated_at']
+    list_filter = ['is_active']
+    search_fields = ['title', 'subtitle']

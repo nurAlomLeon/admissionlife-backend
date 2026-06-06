@@ -3,6 +3,11 @@
 from rest_framework import serializers
 from .models import *
 
+class HomeBannerNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeBannerNotification
+        fields = ['id', 'title', 'subtitle', 'button_text', 'batch_id', 'is_active']
+
 class CategorySerializer(serializers.ModelSerializer):
     children = serializers.SerializerMethodField()
     full_path = serializers.CharField(source='get_full_path', read_only=True)
