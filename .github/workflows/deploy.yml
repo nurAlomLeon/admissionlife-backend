@@ -19,5 +19,5 @@ jobs:
           REMOTE_HOST: ${{ secrets.SSH_HOST }}
           REMOTE_USER: ${{ secrets.SSH_USER }}
           TARGET: "/home/mcqsolve/admission.mcqsolver.com/"
-          EXCLUDE: "/.git/, /.github/, /.htaccess, /passenger_wsgi.py, /db.sqlite3, /.well-known/, /staticfiles/"
+          EXCLUDE: "/.git/, /.github/, /.htaccess, /passenger_wsgi.py, /.well-known/, /staticfiles/"
           ARGS: "-rlptv --delete --no-links"
