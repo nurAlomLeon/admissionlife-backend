@@ -1,6 +1,7 @@
 import csv
 import io
 
+from api.models import Quiz as ApiQuiz
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -13,6 +14,7 @@ from django.db import transaction
 from .models import (
     Answer, Category, Label, Question, QuestionReport, SavedQuestion, Quiz, QuizAttempt,
     Batch, BatchCategory, Enrollment, Exam, ExamAttempt, ExamQuestion, Payment,
+    UniversityCategory, UniversityQuestion,
 )
 from .pagination import AdmissionLifePagination
 from .permissions import IsAuthenticatedUser
@@ -31,6 +33,7 @@ from .serializers import (
     PaymentAdminSerializer,
     PaymentListSerializer,
     PaymentSubmitSerializer,
+    ModelTestSummarySerializer,
     PracticeQuizConfigSerializer,
     PracticeQuizResponseSerializer,
     PracticeQuizAttemptStartSerializer,
@@ -41,6 +44,9 @@ from .serializers import (
     QuestionReportCreateSerializer,
     SavedQuestionCreateSerializer,
     SavedQuestionListSerializer,
+    UniversityCategorySerializer,
+    UniversityCategoryTreeSerializer,
+    UniversityQuestionDetailSerializer,
 )
 from .services import EnrollmentService, ExamAccessService, LeaderboardService, PaymentService, QuestionBankService, QuestionService
 
@@ -143,6 +149,59 @@ class CategoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericV
         return Response(serializer.data)
 
 
+class UniversityCategoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
+    """Read-only viewset for browsing university-wise categories."""
+
+    permission_classes = [IsAuthenticatedUser]
+    pagination_class = AdmissionLifePagination
+    serializer_class = UniversityCategorySerializer
+
+    def get_queryset(self):
+        qs = UniversityCategory.objects.all()
+        level = self.request.query_params.get('level')
+        parent = self.request.query_params.get('parent')
+        if level is not None:
+            qs = qs.filter(level=int(level))
+        if parent is not None:
+            qs = qs.filter(parent_id=int(parent))
+        return qs
+
+    @action(detail=False, methods=['get'])
+    def tree(self, request):
+        tree_data = self._build_tree()
+        serializer = UniversityCategoryTreeSerializer(tree_data, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def children(self, request, pk=None):
+        category = self.get_object()
+        children = category.children.all().order_by('order', 'name')
+        serializer = UniversityCategorySerializer(children, many=True)
+        return Response(serializer.data)
+
+    def _build_tree(self):
+        all_categories = UniversityCategory.objects.all().order_by('level', 'order', 'name')
+        children_map = {}
+        roots = []
+
+        for category in all_categories:
+            children_map.setdefault(category.parent_id, []).append(category)
+
+        def serialize_node(node):
+            return {
+                'id': node.id,
+                'name': node.name,
+                'level': node.level,
+                'order': node.order,
+                'children': [serialize_node(child) for child in children_map.get(node.id, [])],
+            }
+
+        for root in children_map.get(None, []):
+            roots.append(serialize_node(root))
+
+        return roots
+
+
 class QuestionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
     """
     Read-only viewset for browsing questions.
@@ -168,6 +227,65 @@ class QuestionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericV
             else:
                 qs = qs.filter(category_id=int(category_id))
         return qs
+
+
+class UniversityQuestionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
+    """Read-only viewset for university-wise questions."""
+
+    permission_classes = [IsAuthenticatedUser]
+    pagination_class = AdmissionLifePagination
+    serializer_class = UniversityQuestionDetailSerializer
+
+    def get_queryset(self):
+        qs = UniversityQuestion.objects.prefetch_related('answers').select_related('category').order_by('-created_at', '-id')
+        category_id = self.request.query_params.get('category')
+        category_level = self.request.query_params.get('category_level')
+
+        if category_id:
+            if category_level == 'all':
+                category_ids = self._get_descendant_category_ids(int(category_id))
+                qs = qs.filter(category_id__in=category_ids)
+            else:
+                qs = qs.filter(category_id=int(category_id))
+        return qs
+
+    def _get_descendant_category_ids(self, category_id):
+        category = UniversityCategory.objects.get(id=category_id)
+        category_ids = [category.id]
+        category_ids.extend(descendant.id for descendant in category.get_descendants())
+        return category_ids
+
+
+class QuestionBankHomeView(APIView):
+    """Aggregated home payload for model tests, subject-wise, and university-wise sections."""
+
+    permission_classes = [IsAuthenticatedUser]
+
+    def get(self, request):
+        subject_roots = Category.objects.filter(parent__isnull=True).order_by('order', 'name')
+        university_roots = UniversityCategory.objects.filter(parent__isnull=True).order_by('order', 'name')
+        model_tests = ApiQuiz.objects.filter(
+            quiz_type=ApiQuiz.QuizType.MODEL_TEST,
+        ).select_related('category').prefetch_related('questions').order_by('-created_at')[:20]
+
+        return Response({
+            'subject_wise': CategorySerializer(subject_roots, many=True).data,
+            'university_wise': UniversityCategorySerializer(university_roots, many=True).data,
+            'model_tests': ModelTestSummarySerializer(model_tests, many=True).data,
+        })
+
+
+class ModelTestListView(APIView):
+    """Read-only list of existing model tests from the quiz system."""
+
+    permission_classes = [IsAuthenticatedUser]
+
+    def get(self, request):
+        queryset = ApiQuiz.objects.filter(
+            quiz_type=ApiQuiz.QuizType.MODEL_TEST,
+        ).select_related('category').prefetch_related('questions').order_by('-created_at')
+        serializer = ModelTestSummarySerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 # =============================================================================

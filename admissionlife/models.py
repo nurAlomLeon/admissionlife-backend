@@ -100,6 +100,90 @@ class Answer(models.Model):
         return f"Answer for Q{self.question_id}: {str(self.text)[:20]}"
 
 
+class UniversityCategory(models.Model):
+    name = models.CharField(max_length=100)
+    parent = models.ForeignKey(
+        'self', on_delete=models.CASCADE, null=True, blank=True, related_name='children'
+    )
+    level = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        app_label = 'admissionlife'
+        verbose_name_plural = 'University Categories'
+        unique_together = ['name', 'parent']
+        ordering = ['level', 'order', 'name']
+
+    def __str__(self):
+        if self.parent:
+            return f"{str(self.parent)} → {str(self.name)}"
+        return str(self.name)
+
+    def get_full_path(self):
+        path = [str(self.name)]
+        parent = self.parent
+        while parent:
+            path.insert(0, str(parent.name))
+            parent = parent.parent
+        return " → ".join(path)
+
+    def is_leaf(self):
+        return not self.children.exists()
+
+    def get_descendants(self):
+        descendants = []
+        for child in self.children.all():
+            descendants.append(child)
+            descendants.extend(child.get_descendants())
+        return descendants
+
+    def save(self, *args, **kwargs):
+        if self.parent:
+            self.level = self.parent.level + 1
+        else:
+            self.level = 0
+        super().save(*args, **kwargs)
+
+
+class UniversityQuestion(models.Model):
+    category = models.ForeignKey(
+        UniversityCategory,
+        related_name='questions',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    question_text = models.TextField(help_text="The main text of the question.")
+    question_image = models.ImageField(upload_to='admissionlife/university_questions/', blank=True, null=True)
+    explanation = models.TextField(blank=True, null=True)
+    explanation_image = models.ImageField(upload_to='admissionlife/university_explanations/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = 'admissionlife'
+
+    def __str__(self):
+        return str(self.question_text)[:50] + "..."
+
+
+class UniversityAnswer(models.Model):
+    question = models.ForeignKey(
+        UniversityQuestion,
+        related_name='answers',
+        on_delete=models.CASCADE,
+    )
+    text = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='admissionlife/university_answers/', blank=True, null=True)
+    is_correct = models.BooleanField(default=False)
+
+    class Meta:
+        app_label = 'admissionlife'
+
+    def __str__(self):
+        return f"University answer for Q{self.question_id}: {str(self.text)[:20]}"
+
+
 class Quiz(models.Model):
     class QuizType(models.TextChoices):
         PRACTICE = 'PRACTICE', 'Practice'

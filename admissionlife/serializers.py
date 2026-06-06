@@ -1,11 +1,13 @@
 from decimal import Decimal
 
 from rest_framework import serializers
+from api.models import Quiz as ApiQuiz
 
 from .models import (
     Answer, Category, Label, Question, SavedQuestion, QuestionReport,
     Quiz, QuizAttempt, UserSubmission,
     Batch, BatchCategory, Enrollment, Exam, ExamAttempt, ExamQuestion, ExamSubmission, Payment,
+    UniversityAnswer, UniversityCategory, UniversityQuestion,
 )
 from .validators import validate_amount, validate_bangladeshi_phone, validate_transaction_id
 
@@ -566,6 +568,24 @@ class CategoryTreeSerializer(serializers.Serializer):
         return CategoryTreeSerializer(children, many=True).data
 
 
+class UniversityCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UniversityCategory
+        fields = ['id', 'name', 'parent', 'level', 'order']
+
+
+class UniversityCategoryTreeSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    level = serializers.IntegerField()
+    order = serializers.IntegerField()
+    children = serializers.SerializerMethodField()
+
+    def get_children(self, obj):
+        children = obj.get('children', [])
+        return UniversityCategoryTreeSerializer(children, many=True).data
+
+
 # =============================================================================
 # Question Serializers (admissionlife-questions)
 # =============================================================================
@@ -618,6 +638,39 @@ class QuestionQuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = ['id', 'question_text', 'question_image', 'answers']
+
+
+class UniversityAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UniversityAnswer
+        fields = ['id', 'text', 'image', 'is_correct']
+
+
+class UniversityQuestionDetailSerializer(serializers.ModelSerializer):
+    answers = UniversityAnswerSerializer(many=True, read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True, default=None)
+
+    class Meta:
+        model = UniversityQuestion
+        fields = [
+            'id', 'question_text', 'question_image', 'explanation',
+            'explanation_image', 'category', 'category_name', 'answers',
+        ]
+
+
+class ModelTestSummarySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    duration_minutes = serializers.IntegerField()
+    created_at = serializers.DateTimeField()
+    category_name = serializers.SerializerMethodField()
+    question_count = serializers.SerializerMethodField()
+
+    def get_category_name(self, obj: ApiQuiz):
+        return obj.category.name if obj.category else None
+
+    def get_question_count(self, obj: ApiQuiz):
+        return obj.questions.count()
 
 
 # =============================================================================

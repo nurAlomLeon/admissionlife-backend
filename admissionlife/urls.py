@@ -17,6 +17,7 @@ from .views import (
     ExamLeaderboardView,
     ExamViewSet,
     PaymentViewSet,
+    QuestionBankHomeView,
     PracticeQuizAttemptResultView,
     PracticeQuizAttemptStartView,
     PracticeQuizAttemptSubmitView,
@@ -24,6 +25,9 @@ from .views import (
     QuestionReportView,
     QuestionViewSet,
     SavedQuestionViewSet,
+    UniversityCategoryViewSet,
+    UniversityQuestionViewSet,
+    ModelTestListView,
 )
 
 router = DefaultRouter()
@@ -33,6 +37,8 @@ router.register(r'payments', PaymentViewSet, basename='payment')
 router.register(r'exams', ExamViewSet, basename='exam')
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'questions', QuestionViewSet, basename='question')
+router.register(r'university-categories', UniversityCategoryViewSet, basename='university-category')
+router.register(r'university-questions', UniversityQuestionViewSet, basename='university-question')
 router.register(r'saved-questions', SavedQuestionViewSet, basename='saved-question')
 
 admin_router = DefaultRouter()
@@ -95,6 +101,16 @@ urlpatterns = [
         'question-reports/',
         QuestionReportView.as_view(),
         name='question-report',
+    ),
+    path(
+        'question-bank/home/',
+        QuestionBankHomeView.as_view(),
+        name='question-bank-home',
+    ),
+    path(
+        'model-tests/',
+        ModelTestListView.as_view(),
+        name='model-test-list',
     ),
 
     # Practice quiz endpoints

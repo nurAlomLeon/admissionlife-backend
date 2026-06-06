@@ -9,8 +9,9 @@ from django.urls import path
 from .models import (
     Batch, Payment, Enrollment, Exam, ExamQuestion, ExamAttempt, ExamSubmission,
     BatchCategory, Category, Label, Question, Answer, Quiz, QuizAttempt, SavedQuestion, QuestionReport,
+    UniversityAnswer, UniversityCategory, UniversityQuestion,
 )
-from .forms import CsvImportForm
+from .forms import CsvImportForm, UniversityCsvImportForm
 
 
 # =============================================================================
@@ -19,6 +20,12 @@ from .forms import CsvImportForm
 
 class AnswerInline(admin.TabularInline):
     model = Answer
+    extra = 4
+    max_num = 6
+
+
+class UniversityAnswerInline(admin.TabularInline):
+    model = UniversityAnswer
     extra = 4
     max_num = 6
 
@@ -60,6 +67,32 @@ class CategoryAdmin(admin.ModelAdmin):
 class LabelAdmin(admin.ModelAdmin):
     list_display = ['name']
     search_fields = ['name']
+
+
+@admin.register(UniversityCategory)
+class UniversityCategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'get_full_path', 'level', 'parent', 'order', 'get_question_count']
+    list_filter = ['level']
+    search_fields = ['name']
+    ordering = ['level', 'order', 'name']
+    list_editable = ['order']
+    readonly_fields = ['level']
+
+    def get_full_path(self, obj):
+        return obj.get_full_path()
+
+    get_full_path.short_description = 'Full Path'
+
+    def get_question_count(self, obj):
+        if obj.is_leaf():
+            return UniversityQuestion.objects.filter(category=obj).count()
+        descendant_ids = [d.id for d in obj.get_descendants() if d.is_leaf()]
+        return UniversityQuestion.objects.filter(category_id__in=descendant_ids).count()
+
+    get_question_count.short_description = 'Questions'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('parent')
 
 
 @admin.register(Question)
@@ -182,6 +215,148 @@ class QuestionAdmin(admin.ModelAdmin):
         context['title'] = "Import Questions from CSV"
 
         return render(request, "admin/admissionlife/question/csv_form.html", context)
+
+
+@admin.register(UniversityQuestion)
+class UniversityQuestionAdmin(admin.ModelAdmin):
+    inlines = [UniversityAnswerInline]
+    list_display = ['question_text_short', 'get_category_path', 'created_at']
+    list_filter = ['category', 'created_at']
+    search_fields = ['question_text', 'category__name']
+
+    def question_text_short(self, obj):
+        text = obj.question_text
+        return text[:80] + '...' if len(text) > 80 else text
+
+    question_text_short.short_description = 'Question'
+
+    def get_category_path(self, obj):
+        return obj.category.get_full_path() if obj.category else '—'
+
+    get_category_path.short_description = 'Category'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('category')
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'import-csv/',
+                self.admin_site.admin_view(self.import_csv),
+                name='admissionlife_universityquestion_import_csv',
+            ),
+        ]
+        return custom_urls + urls
+
+    def import_csv(self, request):
+        if request.method == "POST":
+            form = UniversityCsvImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                csv_file = request.FILES["csv_file"]
+                selected_category = form.cleaned_data.get('category')
+
+                try:
+                    with transaction.atomic():
+                        decoded_file = io.TextIOWrapper(csv_file.file, encoding='utf-8-sig')
+                        reader = csv.DictReader(decoded_file)
+
+                        required_columns = {'Item Type', 'Question Title', 'Answer Text', 'Answer Correct/InCorrect'}
+                        if not required_columns.issubset(reader.fieldnames or set()):
+                            missing = required_columns - set(reader.fieldnames or [])
+                            self.message_user(
+                                request,
+                                f"Missing required columns: {', '.join(missing)}",
+                                messages.ERROR,
+                            )
+                            return redirect("..")
+
+                        questions_created = 0
+                        answers_created = 0
+                        current_question = None
+
+                        for row in reader:
+                            item_type = row.get('Item Type', '').strip().lower()
+
+                            if item_type == 'question':
+                                question_text = row.get('Question Title', '').strip()
+                                if not question_text:
+                                    continue
+
+                                if selected_category:
+                                    category = selected_category
+                                else:
+                                    category_path = row.get('Categories', '').strip()
+                                    category = self._get_or_create_university_category_from_path(category_path)
+
+                                current_question = UniversityQuestion.objects.create(
+                                    question_text=question_text,
+                                    explanation=row.get('Question Answer Info', '').strip(),
+                                    category=category,
+                                )
+                                questions_created += 1
+
+                            elif item_type == 'answer' and current_question:
+                                answer_text = row.get('Answer Text', '').strip()
+                                if not answer_text:
+                                    continue
+
+                                is_correct = str(
+                                    row.get('Answer Correct/InCorrect', '')
+                                ).strip() == '1'
+                                UniversityAnswer.objects.create(
+                                    question=current_question,
+                                    text=answer_text,
+                                    is_correct=is_correct,
+                                )
+                                answers_created += 1
+
+                    category_msg = (
+                        f" into category '{selected_category.get_full_path()}'"
+                        if selected_category else ""
+                    )
+                    self.message_user(
+                        request,
+                        f"Successfully imported {questions_created} university questions and {answers_created} answers{category_msg}.",
+                        messages.SUCCESS,
+                    )
+                    return redirect("..")
+
+                except Exception as e:
+                    self.message_user(
+                        request,
+                        f"An error occurred during import: {str(e)}",
+                        messages.ERROR,
+                    )
+        else:
+            form = UniversityCsvImportForm()
+
+        context = self.admin_site.each_context(request)
+        context['opts'] = self.model._meta
+        context['form'] = form
+        context['title'] = "Import University Questions from CSV"
+
+        return render(request, "admin/admissionlife/question/csv_form.html", context)
+
+    def _get_or_create_university_category_from_path(self, category_path):
+        if not category_path:
+            return None
+
+        parts = [
+            part.strip()
+            for part in category_path.replace('→', '>').split('>')
+            if part.strip()
+        ]
+        parent = None
+
+        for part in parts:
+            category, _ = UniversityCategory.objects.get_or_create(
+                name=part,
+                parent=parent,
+            )
+            parent = category
+
+        return parent
 
 
 @admin.register(Answer)

@@ -27,7 +27,14 @@ from admissionlife.models import (
     ExamQuestion,
     ExamSubmission,
     Payment,
+    Category,
+    Question,
+    Answer,
+    UniversityCategory,
+    UniversityQuestion,
+    UniversityAnswer,
 )
+from api.models import Quiz as ApiQuiz, QuizCategory as ApiQuizCategory, Category as ApiCategory, Question as ApiQuestion, Answer as ApiAnswer
 
 
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}})
@@ -674,3 +681,66 @@ class BatchCategoryExposureTest(TestCase):
             [item['name'] for item in response.data],
             ['HSC', 'Science'],
         )
+
+
+@override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}})
+class QuestionBankHomeTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='qbhome', password='testpass123')
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+
+        self.subject_root = Category.objects.create(name='Physics', order=1)
+        self.university_root = UniversityCategory.objects.create(name='Engineering', order=1)
+        self.university_unit = UniversityCategory.objects.create(
+            name='BUET',
+            parent=self.university_root,
+            order=1,
+        )
+        self.university_topic = UniversityCategory.objects.create(
+            name='A Unit',
+            parent=self.university_unit,
+            order=1,
+        )
+        self.university_question = UniversityQuestion.objects.create(
+            category=self.university_topic,
+            question_text='What is acceleration?',
+            explanation='Rate of change of velocity',
+        )
+        UniversityAnswer.objects.create(
+            question=self.university_question,
+            text='Rate of change of velocity',
+            is_correct=True,
+        )
+
+        quiz_category = ApiQuizCategory.objects.create(name='Engineering Model Tests')
+        api_category = ApiCategory.objects.create(name='Mathematics')
+        api_question = ApiQuestion.objects.create(
+            category=api_category,
+            question_text='2+2=?',
+        )
+        ApiAnswer.objects.create(question=api_question, text='4', is_correct=True)
+        self.model_test = ApiQuiz.objects.create(
+            name='Engineering Model Test 1',
+            category=quiz_category,
+            quiz_type=ApiQuiz.QuizType.MODEL_TEST,
+            duration_minutes=30,
+        )
+        self.model_test.questions.add(api_question)
+
+    def test_question_bank_home_returns_three_sections(self):
+        response = self.client.get('/api/admissionlife/question-bank/home/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['subject_wise'][0]['name'], 'Physics')
+        self.assertEqual(response.data['university_wise'][0]['name'], 'Engineering')
+        self.assertEqual(response.data['model_tests'][0]['name'], 'Engineering Model Test 1')
+
+    def test_university_question_list_supports_descendants(self):
+        response = self.client.get(
+            f'/api/admissionlife/university-questions/?category={self.university_root.id}&category_level=all'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['results'][0]['question_text'], 'What is acceleration?')
