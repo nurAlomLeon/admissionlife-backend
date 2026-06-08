@@ -9,7 +9,7 @@ from django.urls import path
 from .models import (
     Batch, Payment, Enrollment, Exam, ExamQuestion, ExamAttempt, ExamSubmission,
     BatchCategory, Category, Label, Question, Answer, Quiz, QuizAttempt, SavedQuestion, QuestionReport,
-    UniversityAnswer, UniversityCategory, UniversityQuestion,
+    UniversityAnswer, UniversityCategory, UniversityQuestion, UserProfile,
 )
 from .forms import CsvImportForm, UniversityCsvImportForm
 
@@ -559,3 +559,11 @@ class ExamAttemptAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+  
+  
+@admin.register(UserProfile)  
+class UserProfileAdmin(admin.ModelAdmin):  
+    list_display = ('user', 'hsc_year', 'mobile_number', 'college_name', 'address')  
+    search_fields = ('user__username', 'user__email', 'mobile_number', 'college_name')  
+    list_filter = ('hsc_year',)  
+    raw_id_fields = ('user',) 
