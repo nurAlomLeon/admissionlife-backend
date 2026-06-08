@@ -7,7 +7,7 @@ from .models import (
     Answer, Category, Label, Question, SavedQuestion, QuestionReport,
     Quiz, QuizAttempt, UserSubmission,
     Batch, BatchCategory, Enrollment, Exam, ExamAttempt, ExamQuestion, ExamSubmission, Payment,
-    UniversityAnswer, UniversityCategory, UniversityQuestion,
+    UniversityAnswer, UniversityCategory, UniversityQuestion, UserProfile,
 )
 from .validators import validate_amount, validate_bangladeshi_phone, validate_transaction_id
 
@@ -811,3 +811,33 @@ class PracticeQuizAttemptResultSerializer(serializers.ModelSerializer):
             'question', 'selected_answer'
         ).prefetch_related('question__answers', 'question__labels')
         return PracticeQuizSubmissionDetailSerializer(submissions, many=True).data
+
+from django.contrib.auth.models import User as DjangoUser
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['hsc_year', 'mobile_number', 'college_name', 'address']
+
+
+class CustomUserDetailsSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = DjangoUser
+        fields = ['pk', 'username', 'email', 'first_name', 'last_name', 'profile']
+        read_only_fields = ['pk', 'username', 'email']
+
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['hsc_year', 'mobile_number', 'college_name', 'address']
+
+    def validate_mobile_number(self, value):
+        if value and (len(value) != 11 or not value.startswith('01')):
+            raise serializers.ValidationError(
+                'Mobile number must be 11 digits starting with 01.'
+            )
+        return value

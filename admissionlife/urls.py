@@ -2,6 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    ProfileUpdateView,
     AdminCategoryViewSet,
     AdminLabelViewSet,
     AdminQuestionViewSet,
@@ -111,6 +112,13 @@ urlpatterns = [
         'model-tests/',
         ModelTestListView.as_view(),
         name='model-test-list',
+    ),
+
+    # Profile endpoint
+    path(
+        'profile/',
+        ProfileUpdateView.as_view(),
+        name='profile-update',
     ),
 
     # Practice quiz endpoints

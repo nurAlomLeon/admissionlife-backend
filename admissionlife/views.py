@@ -14,11 +14,12 @@ from django.db import transaction
 from .models import (
     Answer, Category, Label, Question, QuestionReport, SavedQuestion, Quiz, QuizAttempt,
     Batch, BatchCategory, Enrollment, Exam, ExamAttempt, ExamQuestion, Payment,
-    UniversityCategory, UniversityQuestion,
+    UniversityCategory, UniversityQuestion, UserProfile,
 )
 from .pagination import AdmissionLifePagination
 from .permissions import IsAuthenticatedUser
 from .serializers import (
+    ProfileUpdateSerializer,
     BatchCreateUpdateSerializer,
     BatchCategorySerializer,
     BatchDetailSerializer,
@@ -1549,3 +1550,23 @@ class AdminCategoryViewSet(ModelViewSet):
         Question.objects.filter(category=instance).update(category=None)
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ProfileUpdateView(APIView):
+    """Update the authenticated user's profile fields."""
+
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        profile = UserProfile.objects.get(user=request.user)
+        serializer = ProfileUpdateSerializer(profile, data=request.data, partial=False)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        profile = UserProfile.objects.get(user=request.user)
+        serializer = ProfileUpdateSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)

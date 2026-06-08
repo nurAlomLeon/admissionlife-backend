@@ -237,7 +237,8 @@ LOGOUT_REDIRECT_URL = '/'
 REST_AUTH = {
     'USE_JWT': False,
     'SESSION_LOGIN': False,
-    'REGISTER_SERIALIZER': 'dj_rest_auth.registration.serializers.RegisterSerializer'
+    'REGISTER_SERIALIZER': 'dj_rest_auth.registration.serializers.RegisterSerializer',
+    'USER_DETAILS_SERIALIZER': 'admissionlife.serializers.CustomUserDetailsSerializer'
 }
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
