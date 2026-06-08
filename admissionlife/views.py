@@ -1557,15 +1557,19 @@ class ProfileUpdateView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    def _get_profile(self):
+        profile, _ = UserProfile.objects.get_or_create(user=self.request.user)
+        return profile
+
     def put(self, request):
-        profile = UserProfile.objects.get(user=request.user)
+        profile = self._get_profile()
         serializer = ProfileUpdateSerializer(profile, data=request.data, partial=False)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request):
-        profile = UserProfile.objects.get(user=request.user)
+        profile = self._get_profile()
         serializer = ProfileUpdateSerializer(profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
