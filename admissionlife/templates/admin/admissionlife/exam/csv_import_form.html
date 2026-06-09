@@ -18,7 +18,7 @@
             <select name="exam_id" id="exam_id" required>
                 <option value="">-- Select an Exam --</option>
                 {% for exam in exams %}
-                <option value="{{ exam.id }}">{{ exam.batch.name }} - {{ exam.title }}</option>
+                <option value="{{ exam.id }}" {% if selected_exam_id == exam.id|stringformat:"s" %}selected{% endif %}>{{ exam.batch.name }} - {{ exam.title }}</option>
                 {% endfor %}
             </select>
         </div>

@@ -1,0 +1,12 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+  {{ block.super }}
+  {% if change and object_id %}
+    <li>
+      <a href="../../import-csv/?exam_id={{ object_id }}" class="addlink">
+        Import Questions from CSV
+      </a>
+    </li>
+  {% endif %}
+{% endblock %}

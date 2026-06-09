@@ -515,6 +515,7 @@ class ExamAdmin(admin.ModelAdmin):
     search_fields = ('title',)
     inlines = [ExamQuestionInline]
     change_list_template = "admin/admissionlife/exam/change_list.html"
+    change_form_template = "admin/admissionlife/exam/change_form.html"
 
     def get_urls(self):
         urls = super().get_urls()
@@ -618,6 +619,7 @@ class ExamAdmin(admin.ModelAdmin):
         context['opts'] = self.model._meta
         context['title'] = "Import Questions from CSV"
         context['exams'] = exams
+        context['selected_exam_id'] = request.GET.get('exam_id')
         return render(request, "admin/admissionlife/exam/csv_import_form.html", context)
 
 
