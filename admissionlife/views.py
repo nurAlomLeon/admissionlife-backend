@@ -1553,13 +1553,18 @@ class AdminCategoryViewSet(ModelViewSet):
 
 
 class ProfileUpdateView(APIView):
-    """Update the authenticated user's profile fields."""
+    """Retrieve and update the authenticated user's profile fields."""
 
     permission_classes = [IsAuthenticated]
 
     def _get_profile(self):
         profile, _ = UserProfile.objects.get_or_create(user=self.request.user)
         return profile
+
+    def get(self, request):
+        profile = self._get_profile()
+        serializer = ProfileUpdateSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request):
         profile = self._get_profile()

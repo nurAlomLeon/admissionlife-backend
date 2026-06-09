@@ -822,11 +822,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class CustomUserDetailsSerializer(serializers.ModelSerializer):
-    profile = UserProfileSerializer(read_only=True)
+    hsc_year = serializers.IntegerField(
+        source='profile.hsc_year', read_only=True, allow_null=True)
+    mobile_number = serializers.CharField(
+        source='profile.mobile_number', read_only=True, default='')
+    college_name = serializers.CharField(
+        source='profile.college_name', read_only=True, default='')
+    address = serializers.CharField(
+        source='profile.address', read_only=True, default='')
 
     class Meta:
         model = DjangoUser
-        fields = ['pk', 'username', 'email', 'first_name', 'last_name', 'profile']
+        fields = ['pk', 'username', 'email', 'first_name', 'last_name',
+                  'hsc_year', 'mobile_number', 'college_name', 'address']
         read_only_fields = ['pk', 'username', 'email']
 
 
