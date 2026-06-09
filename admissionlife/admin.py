@@ -2,7 +2,11 @@ import csv
 import io
 
 from django.contrib import admin, messages
+from django import forms
+from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Max
+from django.forms.models import BaseInlineFormSet
 from django.shortcuts import render, redirect
 from django.urls import path
 
@@ -401,6 +405,53 @@ class ExamQuestionInline(admin.TabularInline):
     extra = 0
 
 
+class BatchExamInlineForm(forms.ModelForm):
+    def validate_unique(self):
+        # Inline-level validation handles final sequence uniqueness, allowing swaps.
+        pass
+
+
+class BatchExamInlineFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        seen_orders = set()
+
+        for form in self.forms:
+            if not hasattr(form, 'cleaned_data'):
+                continue
+            if form.cleaned_data.get('DELETE'):
+                continue
+            order = form.cleaned_data.get('order')
+            if order is None:
+                continue
+            if order < 1:
+                raise ValidationError('Exam sequence must be a positive number.')
+            if order in seen_orders:
+                raise ValidationError('Each exam in this batch must have a unique sequence number.')
+            seen_orders.add(order)
+
+
+class BatchExamInline(admin.TabularInline):
+    model = Exam
+    form = BatchExamInlineForm
+    formset = BatchExamInlineFormSet
+    fields = ('title', 'duration_minutes', 'order', 'passing_score', 'unlock_datetime', 'is_active')
+    extra = 1
+    ordering = ('order',)
+    verbose_name = 'Exam'
+    verbose_name_plural = 'Exams'
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'order':
+            formfield.label = 'Sequence'
+            formfield.help_text = 'Controls recorded batch progression and exam display order.'
+        elif db_field.name == 'unlock_datetime':
+            formfield.label = 'Start date/time'
+            formfield.help_text = 'Used for live batches. Leave blank for recorded batches.'
+        return formfield
+
+
 @admin.register(BatchCategory)
 class BatchCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'order')
@@ -415,6 +466,33 @@ class BatchAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description')
     filter_horizontal = ('categories',)
     fields = ('name', 'description', 'banner_image', 'batch_type', 'categories', 'price', 'is_active')
+    inlines = [BatchExamInline]
+
+    def save_formset(self, request, form, formset, change):
+        if formset.model is not Exam:
+            return super().save_formset(request, form, formset, change)
+
+        with transaction.atomic():
+            instances = formset.save(commit=False)
+
+            for deleted_obj in formset.deleted_objects:
+                deleted_obj.delete()
+
+            existing_instances = [instance for instance in instances if instance.pk]
+            new_instances = [instance for instance in instances if not instance.pk]
+
+            if existing_instances:
+                max_order = Exam.objects.filter(batch=form.instance).aggregate(Max('order'))['order__max'] or 0
+                temporary_order = max_order + 1000
+
+                for index, instance in enumerate(existing_instances, start=1):
+                    Exam.objects.filter(pk=instance.pk).update(order=temporary_order + index)
+
+            for instance in existing_instances + new_instances:
+                instance.batch = form.instance
+                instance.save()
+
+            formset.save_m2m()
 
 
 @admin.register(Payment)
@@ -432,7 +510,7 @@ class EnrollmentAdmin(admin.ModelAdmin):
 
 @admin.register(Exam)
 class ExamAdmin(admin.ModelAdmin):
-    list_display = ('title', 'batch', 'order', 'duration_minutes', 'is_active')
+    list_display = ('title', 'batch', 'order', 'duration_minutes', 'unlock_datetime', 'is_active')
     list_filter = ('batch', 'is_active')
     search_fields = ('title',)
     inlines = [ExamQuestionInline]
