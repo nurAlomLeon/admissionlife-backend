@@ -414,6 +414,7 @@ class BatchAdmin(admin.ModelAdmin):
     list_filter = ('batch_type', 'is_active', 'categories')
     search_fields = ('name', 'description')
     filter_horizontal = ('categories',)
+    fields = ('name', 'description', 'banner_image', 'batch_type', 'categories', 'price', 'is_active')
 
 
 @admin.register(Payment)

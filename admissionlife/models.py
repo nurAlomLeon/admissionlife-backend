@@ -321,6 +321,7 @@ class Batch(models.Model):
 
     name = models.CharField(max_length=200, unique=True)
     description = models.TextField(max_length=2000)
+    banner_image = models.ImageField(upload_to='admissionlife/batch_banners/', blank=True, null=True)
     batch_type = models.CharField(max_length=15, choices=BatchType.choices)
     categories = models.ManyToManyField(BatchCategory, related_name='batches', blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2)  # 0.00 to 999999.99

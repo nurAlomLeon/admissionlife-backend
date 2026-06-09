@@ -27,13 +27,29 @@ class BatchListSerializer(serializers.ModelSerializer):
     """Serializer for public batch listing."""
 
     categories = BatchCategorySerializer(many=True, read_only=True)
+    banner_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Batch
         fields = [
-            'id', 'name', 'description', 'batch_type', 'price',
+            'id', 'name', 'description', 'banner_image', 'batch_type', 'price',
             'is_active', 'categories',
         ]
+
+    def get_banner_image(self, obj):
+        if not obj.banner_image:
+            return None
+        request = self.context.get('request')
+        url = obj.banner_image.url
+        return request.build_absolute_uri(url) if request else url
+
+
+class BatchCoursePlanExamSerializer(serializers.ModelSerializer):
+    """Lightweight exam serializer for a batch course plan."""
+
+    class Meta:
+        model = Exam
+        fields = ['id', 'title', 'order', 'duration_minutes', 'unlock_datetime']
 
 
 class BatchDetailSerializer(serializers.ModelSerializer):
@@ -42,20 +58,33 @@ class BatchDetailSerializer(serializers.ModelSerializer):
     exam_count = serializers.SerializerMethodField()
     enrollment_count = serializers.SerializerMethodField()
     categories = BatchCategorySerializer(many=True, read_only=True)
+    banner_image = serializers.SerializerMethodField()
+    course_plan = serializers.SerializerMethodField()
 
     class Meta:
         model = Batch
         fields = [
-            'id', 'name', 'description', 'batch_type', 'price',
+            'id', 'name', 'description', 'banner_image', 'batch_type', 'price',
             'is_active', 'created_at', 'updated_at',
-            'exam_count', 'enrollment_count', 'categories',
+            'exam_count', 'enrollment_count', 'categories', 'course_plan',
         ]
+
+    def get_banner_image(self, obj):
+        if not obj.banner_image:
+            return None
+        request = self.context.get('request')
+        url = obj.banner_image.url
+        return request.build_absolute_uri(url) if request else url
 
     def get_exam_count(self, obj):
         return obj.exams.count()
 
     def get_enrollment_count(self, obj):
         return obj.enrollments.count()
+
+    def get_course_plan(self, obj):
+        exams = obj.exams.filter(is_active=True).order_by('order')
+        return BatchCoursePlanExamSerializer(exams, many=True).data
 
 
 class BatchCreateUpdateSerializer(serializers.ModelSerializer):
@@ -69,7 +98,7 @@ class BatchCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Batch
-        fields = ['name', 'description', 'batch_type', 'price', 'is_active', 'categories']
+        fields = ['name', 'description', 'banner_image', 'batch_type', 'price', 'is_active', 'categories']
 
     def validate_name(self, value):
         if not value or not value.strip():
