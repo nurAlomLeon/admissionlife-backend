@@ -104,28 +104,21 @@ class FullEnrollmentFlowTest(TestCase):
         payment = Payment.objects.get(id=payment_id)
         self.assertEqual(payment.status, Payment.PaymentStatus.PENDING)
 
-        # Step 2: Verify user IS now enrolled (enrollment auto-created on payment)
+        # Step 2: Verify user is not enrolled while payment is pending
         response = self.client.get(f'/api/admissionlife/enrollments/check/{self.batch.id}/')
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.data['is_enrolled'])
+        self.assertFalse(response.data['is_enrolled'])
 
-        # Step 3: User can start exam (enrolled immediately)
+        # Step 3: User cannot start exam before payment approval
         response = self.client.post(f'/api/admissionlife/exam-attempts/{self.exam.id}/start/')
-        self.assertEqual(response.status_code, 201)
-        self.assertIn('attempt_id', response.data)
-        self.assertIn('questions', response.data)
-        self.assertEqual(len(response.data['questions']), 2)
+        self.assertEqual(response.status_code, 403)
 
-        # Verify questions don't include correct_answer
-        for q in response.data['questions']:
-            self.assertNotIn('correct_answer', q)
-
-        # Step 4: Admin approves payment (enrollment already exists from step 2)
+        # Step 4: Admin approves payment
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.admin_token.key)
         response = self.client.post(f'/api/admissionlife/payments/{payment_id}/approve/')
         self.assertEqual(response.status_code, 200)
 
-        # Step 5: Enrollment still exists
+        # Step 5: Enrollment now exists
         self.assertTrue(Enrollment.objects.filter(user=self.user, batch=self.batch).exists())
         self.assertEqual(Enrollment.objects.filter(user=self.user, batch=self.batch).count(), 1)
 
@@ -137,6 +130,17 @@ class FullEnrollmentFlowTest(TestCase):
 
         # Verify enrollment count didn't duplicate
         self.assertEqual(Enrollment.objects.filter(user=self.user, batch=self.batch).count(), 1)
+
+        # Step 7: User can start exam after approval
+        response = self.client.post(f'/api/admissionlife/exam-attempts/{self.exam.id}/start/')
+        self.assertEqual(response.status_code, 201)
+        self.assertIn('attempt_id', response.data)
+        self.assertIn('questions', response.data)
+        self.assertEqual(len(response.data['questions']), 2)
+
+        # Verify questions don't include correct_answer
+        for q in response.data['questions']:
+            self.assertNotIn('correct_answer', q)
 
     def test_payment_rejection_does_not_create_enrollment(self):
         """Admin rejects payment → No enrollment created."""

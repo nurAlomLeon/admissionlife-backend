@@ -109,17 +109,6 @@ class PaymentService:
             status=Payment.PaymentStatus.PENDING,
         )
 
-        # Auto-create enrollment so the user gets immediate access
-        try:
-            EnrollmentService.create_enrollment(
-                user=user,
-                batch=batch,
-                payment=payment,
-            )
-        except Exception:
-            # If enrollment creation fails, still return the payment
-            pass
-
         return payment
 
     @staticmethod
@@ -188,7 +177,7 @@ class PaymentService:
         payment.reviewed_at = timezone.now()
         payment.save()
 
-        # Remove auto-created enrollment so the user loses access
+        # Defensive cleanup in case an enrollment was created outside this flow.
         Enrollment.objects.filter(user=payment.user, batch=payment.batch).delete()
 
         return payment

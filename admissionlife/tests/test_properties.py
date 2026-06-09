@@ -2331,7 +2331,8 @@ class TestProperty9PaymentCreatedAsPending(TestCase):
     Property 9: Payment created as PENDING
 
     For any valid payment submission by an authenticated user, the created Payment
-    record should have status=PENDING and user equal to the requesting user.
+    record should have status=PENDING, user equal to the requesting user, and no
+    enrollment until admin approval.
 
     **Validates: Requirements 3.2**
     """
@@ -2347,10 +2348,11 @@ class TestProperty9PaymentCreatedAsPending(TestCase):
         self, payment_method, transaction_id, sender_number, amount
     ):
         """
-        Submitting a valid payment should create a Payment with status=PENDING
-        and user equal to the requesting user.
+        Submitting a valid payment should create a Payment with status=PENDING,
+        user equal to the requesting user, and no enrollment.
         """
         # Feature: admissionlife, Property 9: Payment created as PENDING
+        from admissionlife.models import Enrollment
         from admissionlife.services import PaymentService
 
         user = User.objects.create_user(
@@ -2380,6 +2382,9 @@ class TestProperty9PaymentCreatedAsPending(TestCase):
 
         # Assert: payment user is the requesting user
         self.assertEqual(payment.user, user)
+
+        # Assert: enrollment is not created until admin approves the payment
+        self.assertFalse(Enrollment.objects.filter(user=user, batch=batch).exists())
 
         # Assert: payment is persisted in the database
         payment.refresh_from_db()
