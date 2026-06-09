@@ -12,12 +12,14 @@ from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
+from admissionlife.admin import PaymentAdmin
 from admissionlife.models import (
     Batch,
     BatchCategory,
@@ -170,6 +172,37 @@ class FullEnrollmentFlowTest(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.user_token.key)
         response = self.client.post(f'/api/admissionlife/exam-attempts/{self.exam.id}/start/')
         self.assertEqual(response.status_code, 403)
+
+    def test_django_admin_payment_approval_creates_enrollment(self):
+        """Approving payment from Django admin creates enrollment."""
+        payment = Payment.objects.create(
+            user=self.user,
+            batch=self.batch,
+            payment_method='bKash',
+            transaction_id='TXN_ADMIN_APPROVE',
+            sender_number='01712345678',
+            amount='500.00',
+            status=Payment.PaymentStatus.PENDING,
+        )
+        payment.status = Payment.PaymentStatus.APPROVED
+
+        request = RequestFactory().post('/')
+        request.user = self.admin
+        form = type('PaymentAdminForm', (), {'changed_data': ['status']})()
+        payment_admin = PaymentAdmin(Payment, AdminSite())
+
+        payment_admin.save_model(request, payment, form, change=True)
+
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, Payment.PaymentStatus.APPROVED)
+        self.assertIsNotNone(payment.reviewed_at)
+        self.assertTrue(
+            Enrollment.objects.filter(
+                user=self.user,
+                batch=self.batch,
+                payment=payment,
+            ).exists()
+        )
 
 
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}})

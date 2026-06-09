@@ -9,6 +9,7 @@ from django.db.models import Max
 from django.forms.models import BaseInlineFormSet
 from django.shortcuts import render, redirect
 from django.urls import path
+from django.utils import timezone
 
 from .models import (
     Batch, Payment, Enrollment, Exam, ExamQuestion, ExamAttempt, ExamSubmission,
@@ -16,6 +17,7 @@ from .models import (
     UniversityAnswer, UniversityCategory, UniversityQuestion, UserProfile,
 )
 from .forms import CsvImportForm, UniversityCsvImportForm
+from .services import EnrollmentService
 
 
 # =============================================================================
@@ -500,6 +502,24 @@ class PaymentAdmin(admin.ModelAdmin):
     list_display = ('user', 'batch', 'payment_method', 'transaction_id', 'amount', 'status', 'created_at')
     list_filter = ('status', 'payment_method')
     search_fields = ('transaction_id', 'sender_number', 'user__username')
+
+    def save_model(self, request, obj, form, change):
+        status_changed = 'status' in form.changed_data
+        if obj.status != Payment.PaymentStatus.PENDING and obj.reviewed_at is None:
+            obj.reviewed_at = timezone.now()
+
+        super().save_model(request, obj, form, change)
+
+        if obj.status == Payment.PaymentStatus.APPROVED:
+            EnrollmentService.create_enrollment(
+                user=obj.user,
+                batch=obj.batch,
+                payment=obj,
+            )
+            return
+
+        if status_changed:
+            Enrollment.objects.filter(user=obj.user, batch=obj.batch).delete()
 
 
 @admin.register(Enrollment)
