@@ -781,3 +781,48 @@ class QuestionBankHomeTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['results'][0]['question_text'], 'What is acceleration?')
+
+
+class PracticeQuizDurationTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='practice_duration',
+            password='testpass123',
+        )
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+
+        self.category = Category.objects.create(name='Chemistry', order=1)
+        self.question = Question.objects.create(
+            category=self.category,
+            question_text='What is H2O?',
+        )
+        Answer.objects.create(question=self.question, text='Water', is_correct=True)
+
+    def test_generate_and_start_practice_quiz_uses_requested_duration(self):
+        response = self.client.post(
+            '/api/admissionlife/practice-quizzes/',
+            {
+                'duration_minutes': 25,
+                'categories': [
+                    {
+                        'category_id': self.category.id,
+                        'question_count': 1,
+                        'include_subcategories': False,
+                    }
+                ],
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['duration_minutes'], 25)
+
+        start_response = self.client.post(
+            f"/api/admissionlife/practice-quizzes/{response.data['id']}/start/",
+            format='json',
+        )
+
+        self.assertEqual(start_response.status_code, 201)
+        self.assertEqual(start_response.data['duration_minutes'], 25)

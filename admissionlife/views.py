@@ -1201,6 +1201,7 @@ class PracticeQuizView(APIView):
 
     Request body:
     {
+        "duration_minutes": 20,
         "categories": [
             {"category_id": 5, "question_count": 10, "include_subcategories": true},
             {"category_id": 12, "question_count": 5, "include_subcategories": false}
@@ -1216,7 +1217,8 @@ class PracticeQuizView(APIView):
 
         quiz = QuestionService.generate_practice_quiz(
             user=request.user,
-            categories_config=serializer.validated_data['categories']
+            categories_config=serializer.validated_data['categories'],
+            duration_minutes=serializer.validated_data['duration_minutes'],
         )
 
         if quiz is None:
@@ -1258,6 +1260,7 @@ class PracticeQuizAttemptStartView(APIView):
 
         serializer = PracticeQuizAttemptStartSerializer({
             'attempt_id': attempt.id,
+            'duration_minutes': quiz.duration_minutes,
             'questions': questions,
         })
 

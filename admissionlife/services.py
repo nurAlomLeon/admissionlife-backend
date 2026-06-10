@@ -791,7 +791,7 @@ class QuestionService:
         return ids
 
     @staticmethod
-    def generate_practice_quiz(user, categories_config):
+    def generate_practice_quiz(user, categories_config, duration_minutes=None):
         """
         Generate a practice quiz based on category selections.
 
@@ -801,6 +801,8 @@ class QuestionService:
                 - category_id: int
                 - question_count: int
                 - include_subcategories: bool
+            duration_minutes: int or None. If omitted, defaults to one minute per
+                selected question.
 
         Returns:
             Quiz instance with questions attached, or None if no questions selected.
@@ -851,7 +853,11 @@ class QuestionService:
         quiz = Quiz.objects.create(
             name=f"Practice Quiz - {username} - {timezone.now().strftime('%Y%m%d%H%M%S')}",
             quiz_type=Quiz.QuizType.PRACTICE,
-            duration_minutes=len(all_selected_questions) * 1,  # 1 min per question
+            duration_minutes=(
+                duration_minutes
+                if duration_minutes is not None
+                else len(all_selected_questions)
+            ),
         )
         quiz.questions.set(all_selected_questions)
 

@@ -778,6 +778,7 @@ class CategorySelectionSerializer(serializers.Serializer):
 class PracticeQuizConfigSerializer(serializers.Serializer):
     """Serializer for practice quiz generation request body."""
 
+    duration_minutes = serializers.IntegerField(min_value=1, max_value=300)
     categories = CategorySelectionSerializer(many=True)
 
     def validate_categories(self, value):
@@ -800,6 +801,7 @@ class PracticeQuizAttemptStartSerializer(serializers.Serializer):
     """Read-only response serializer for when a user starts a practice quiz attempt."""
 
     attempt_id = serializers.IntegerField()
+    duration_minutes = serializers.IntegerField(required=False)
     questions = QuestionQuizSerializer(many=True)
 
 
